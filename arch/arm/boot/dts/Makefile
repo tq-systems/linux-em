@@ -463,6 +463,7 @@ dtb-$(CONFIG_ARCH_MXS) += \
 	imx28-cfa10058.dtb \
 	imx28-duckbill.dtb \
 	imx28-em300.dtb \
+	imx28-em310.dtb \
 	imx28-eukrea-mbmx283lc.dtb \
 	imx28-eukrea-mbmx287lc.dtb \
 	imx28-evk.dtb \

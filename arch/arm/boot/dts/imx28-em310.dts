@@ -1,0 +1,279 @@
+/*
+ * Copyright (C) 2015 Jeremias Schneider <jeremias.schneider@tq-group.com>
+ *
+ * The code contained herein is licensed under the GNU General Public
+ * License. You may obtain a copy of the GNU General Public License
+ * Version 2 or later at the following locations:
+ *
+ * http://www.opensource.org/licenses/gpl-license.html
+ * http://www.gnu.org/copyleft/gpl.html
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include "imx28.dtsi"
+
+/ {
+	model = "TQ Energy Manager 310";
+	compatible = "tq,energymanager310", "fsl,imx28";
+
+	memory {
+		reg = <0x40000000 0x08000000>;
+	};
+
+	apb@80000000 {
+		apbh@80000000 {
+			ssp0: ssp@80010000 {
+				compatible = "fsl,imx28-mmc";
+				pinctrl-names = "default";
+				pinctrl-0 = <&mmc0_8bit_pins_a>;
+				bus-width = <8>;
+				non-removable;
+				tq,dsr = <0x0100>;
+				vmmc-supply = <&reg_vddio_sd0>;
+				status = "okay";
+			};
+
+			ssp3: ssp@80016000 {
+				compatible = "fsl,imx28-spi";
+				pinctrl-names = "default";
+				pinctrl-0 = <&spi3_pins_b>;
+				status = "okay";
+
+				spidev0: spi@0 {
+					compatible = "spidev";
+					reg = <0>;
+					spi-max-frequency = <1000000>;
+				};
+			};
+
+			pinctrl@80018000 {
+				hog_pins_a: hog-gpios@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX28_PAD_SAIF0_MCLK__GPIO_3_20
+					>;
+					fsl,drive-strength = <MXS_DRIVE_8mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_DISABLE>;
+				};
+
+				led_pins_a: led_gpio@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX28_PAD_SSP2_SCK__GPIO_2_16
+						MX28_PAD_SSP2_MOSI__GPIO_2_17
+						MX28_PAD_SSP2_MISO__GPIO_2_18
+						MX28_PAD_SSP2_SS0__GPIO_2_19
+						MX28_PAD_SSP2_SS1__GPIO_2_20
+						MX28_PAD_SSP2_SS2__GPIO_2_21
+					>;
+					fsl,drive-strength = <MXS_DRIVE_4mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_DISABLE>;
+				};
+
+				spi3_pins_b: teridian@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX28_PAD_GPMI_CE0N__SSP3_D0
+						MX28_PAD_GPMI_CE1N__SSP3_D3
+						MX28_PAD_GPMI_RDN__SSP3_SCK
+						MX28_PAD_GPMI_RESETN__SSP3_CMD
+					>;
+					fsl,drive-strength = <MXS_DRIVE_8mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_DISABLE>;
+				};
+
+				auart0_3pins_a: auart0-3pins@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX28_PAD_AUART0_RX__AUART0_RX
+						MX28_PAD_AUART0_TX__AUART0_TX
+						MX28_PAD_AUART0_RTS__AUART0_RTS
+					>;
+					fsl,drive-strength = <MXS_DRIVE_4mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_DISABLE>;
+				};
+
+				auart4_3pins_a: auart4-3pins@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX28_PAD_SAIF0_BITCLK__AUART4_RX
+						MX28_PAD_SAIF0_SDATA0__AUART4_TX
+						MX28_PAD_SAIF0_LRCLK__AUART4_RTS
+					>;
+					fsl,drive-strength = <MXS_DRIVE_4mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_DISABLE>;
+				};
+
+				mac0_pins_a: mac0@0 {
+					reg = <0>;
+					fsl,pinmux-ids = <
+						MX28_PAD_ENET0_MDC__GPIO_4_0 /* MDC */
+						MX28_PAD_ENET0_MDIO__GPIO_4_1 /* MDIO */
+						MX28_PAD_ENET0_RX_EN__ENET0_RX_EN
+						MX28_PAD_ENET0_RXD0__ENET0_RXD0
+						MX28_PAD_ENET0_RXD1__ENET0_RXD1
+						MX28_PAD_ENET0_TX_EN__ENET0_TX_EN
+						MX28_PAD_ENET0_TXD0__ENET0_TXD0
+						MX28_PAD_ENET0_TXD1__ENET0_TXD1
+						MX28_PAD_ENET_CLK__CLKCTRL_ENET
+					>;
+					fsl,drive-strength = <MXS_DRIVE_8mA>;
+					fsl,voltage = <MXS_VOLTAGE_HIGH>;
+					fsl,pull-up = <MXS_PULL_ENABLE>;
+				};
+			};
+		};
+
+		apbx@80040000 {
+			i2c0: i2c@80058000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&i2c0_pins_a>;
+				clock-frequency = <400000>;
+				status = "okay";
+
+                                eeprom@50 {
+                                        compatible = "atmel,24c32";
+                                        reg = <0x50>;
+                                        read-only;
+                                };
+
+				rtc@51 {
+					compatible = "nxp,pcf85063";
+					reg = <0x51>;
+				};
+			};
+
+			duart: serial@80074000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&duart_pins_a>;
+				status = "okay";
+			};
+
+			auart0: serial@8006a000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&auart0_3pins_a>;
+				fsl,rs485-uart;
+				status = "okay";
+			};
+
+			auart4: serial@80072000 {
+				pinctrl-names = "default";
+				pinctrl-0 = <&auart4_3pins_a>;
+				fsl,rs485-uart;
+				status = "okay";
+			};
+
+			usbphy1: usbphy@8007e000 {
+				status = "okay";
+			};
+		};
+	};
+
+	ahb@80080000 {
+		usb1: usb@80090000 {
+			vbus-supply = <&reg_5p0v>;
+			disable-over-current;
+			dr_mode = "host";
+			status = "okay";
+		};
+
+		mac0: ethernet@800f0000 {
+			phy-mode = "rmii";
+			pinctrl-names = "default";
+			pinctrl-0 = <&mac0_pins_a>;
+			phy-supply = <&reg_3p3v>;
+			phy-reset-gpios = <&gpio0 7 0>;
+			phy-reset-duration = <100>;
+			clocks = <&clks 57>, <&clks 57>;
+			clock-names = "ipg", "ahb";
+			fixed-link = <1 1 100 0 0>;
+			status = "okay";
+		};
+	};
+
+	regulators {
+		compatible = "simple-bus";
+
+		reg_5p0v: 5p0v {
+			compatible = "regulator-fixed";
+			regulator-name = "5P0V";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			regulator-always-on;
+		};
+
+		reg_3p3v: 3p3v {
+			compatible = "regulator-fixed";
+			regulator-name = "3P3V";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-always-on;
+			gpio = <&gpio3 20 0>;
+			enable-active-high;
+		};
+
+		reg_vddio_sd0: vddio-sd0 {
+			compatible = "regulator-fixed";
+			regulator-name = "vddio-sd0";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-always-on;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&led_pins_a>;
+
+		status_green {
+			label = "energymanager310:green:status";
+			gpios = <&gpio2 16 GPIO_ACTIVE_HIGH>;
+		};
+
+		status_red {
+			label = "energymanager310:red:status";
+			gpios = <&gpio2 17 GPIO_ACTIVE_HIGH>;
+		};
+
+		network_green {
+			label = "energymanager310:green:network";
+			gpios = <&gpio2 18 GPIO_ACTIVE_HIGH>;
+		};
+
+		network_red {
+			label = "energymanager310:red:network";
+			gpios = <&gpio2 19 GPIO_ACTIVE_HIGH>;
+		};
+
+		sensor_green {
+			label = "energymanager310:green:sensor";
+			gpios = <&gpio2 20 GPIO_ACTIVE_HIGH>;
+		};
+
+		sensor_red {
+			label = "energymanager310:red:sensor";
+			gpios = <&gpio2 21 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		reset {
+			label = "Reset";
+			gpios = <&gpio3 4 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+		};
+	};
+};
