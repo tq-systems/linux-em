@@ -43,7 +43,7 @@
 				status = "okay";
 
 				spidev0: spi@0 {
-					compatible = "spidev";
+					compatible = "tqc,teridian";
 					reg = <0>;
 					spi-max-frequency = <1000000>;
 				};
