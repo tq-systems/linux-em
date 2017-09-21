@@ -82,6 +82,8 @@
 						MX28_PAD_GPMI_CE1N__SSP3_D3
 						MX28_PAD_GPMI_RDN__SSP3_SCK
 						MX28_PAD_GPMI_RESETN__SSP3_CMD
+
+						MX28_PAD_AUART1_TX__GPIO_3_5
 					>;
 					fsl,drive-strength = <MXS_DRIVE_8mA>;
 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
