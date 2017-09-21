@@ -19,6 +19,10 @@
 	model = "TQ Energy Manager 310";
 	compatible = "tq,energymanager310", "fsl,imx28";
 
+	aliases {
+		spi1 = &ssp3;
+	};
+
 	memory {
 		reg = <0x40000000 0x08000000>;
 	};
