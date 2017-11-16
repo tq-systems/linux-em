@@ -121,8 +121,9 @@
 				mac0_pins_a: mac0@0 {
 					reg = <0>;
 					fsl,pinmux-ids = <
-						MX28_PAD_ENET0_MDC__GPIO_4_0 /* MDC */
-						MX28_PAD_ENET0_MDIO__GPIO_4_1 /* MDIO */
+						MX28_PAD_ENET0_MDC__GPIO_4_0  /* ENET.MDC */
+						MX28_PAD_ENET0_MDIO__GPIO_4_1 /* ENET.MDIO */
+						MX28_PAD_GPMI_D06__GPIO_0_6   /* ENET.INT# */
 						MX28_PAD_ENET0_RX_EN__ENET0_RX_EN
 						MX28_PAD_ENET0_RXD0__ENET0_RXD0
 						MX28_PAD_ENET0_RXD1__ENET0_RXD1
