@@ -126,4 +126,11 @@ config LEDS_TRIGGER_PANIC
 	  a different trigger.
 	  If unsure, say Y.
 
+config LEDS_TRIGGER_NETDEV
+	bool "LED Netdev Trigger"
+	depends on LEDS_TRIGGERS
+	help
+	  This allows LEDs to be configured to blink on network traffic.
+	  If unsure, say N.
+
 endif # LEDS_TRIGGERS
