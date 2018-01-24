@@ -58,6 +58,9 @@
 					reg = <0>;
 					fsl,pinmux-ids = <
 						MX28_PAD_SAIF0_MCLK__GPIO_3_20
+
+						MX28_PAD_GPMI_WRN__GPIO_0_25
+						MX28_PAD_GPMI_CLE__GPIO_0_27
 					>;
 					fsl,drive-strength = <MXS_DRIVE_8mA>;
 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
@@ -270,6 +273,18 @@
 		sensor_red {
 			label = "energymanager:red:sensor";
 			gpios = <&gpio2 21 GPIO_ACTIVE_HIGH>;
+		};
+
+		vbus_en {
+			label = "rs485:vbus_en";
+			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+
+		vbus_sw {
+			label = "rs485:vbus_sw";
+			gpios = <&gpio0 27 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
 		};
 	};
 

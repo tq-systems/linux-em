@@ -58,7 +58,11 @@
 
 				hog_pins_a: hog@0 {
 					reg = <0>;
-					fsl,pinmux-ids = <MX28_PAD_LCD_D00__GPIO_1_0>;
+					fsl,pinmux-ids = <
+						MX28_PAD_LCD_D00__GPIO_1_0
+
+						MX28_PAD_SAIF1_SDATA0__GPIO_3_26
+					>;
 					fsl,drive-strength = <MXS_DRIVE_4mA>;
 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
 					fsl,pull-up = <MXS_PULL_DISABLE>;
@@ -244,6 +248,12 @@
 		sensor_red {
 			label = "energymanager:red:sensor";
 			gpios = <&gpio1 23 GPIO_ACTIVE_HIGH>;
+		};
+
+		cms_disable {
+			label = "rs485:cms_disable";
+			gpios = <&gpio3 26 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
 		};
 	};
 

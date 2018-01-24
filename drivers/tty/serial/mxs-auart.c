@@ -427,6 +427,8 @@ struct mxs_auart_port {
 #define MXS_AUART_DMA_TX_SYNC	2  /* bit 2 */
 #define MXS_AUART_DMA_RX_READY	3  /* bit 3 */
 #define MXS_AUART_RTSCTS	4  /* bit 4 */
+#define MXS_AUART_RS485	5  /* bit 5 */
+
 	unsigned long flags;
 	unsigned int mctrl_prev;
 	enum mxs_auart_type devtype;
@@ -620,6 +622,15 @@ static void mxs_auart_tx_chars(struct mxs_auart_port *s)
 		return;
 	}
 
+	if (
+		test_bit(MXS_AUART_RS485, &s->flags) &&
+		(
+			s->port.x_char ||
+			(!uart_circ_empty(xmit) && !uart_tx_stopped(&s->port))
+		)
+	) {
+		mxs_clr(AUART_CTRL2_RTS, s, REG_CTRL2);
+	}
 
 	while (!(mxs_read(s, REG_STAT) & AUART_STAT_TXFF)) {
 		if (s->port.x_char) {
@@ -642,6 +653,11 @@ static void mxs_auart_tx_chars(struct mxs_auart_port *s)
 		mxs_clr(AUART_INTR_TXIEN, s, REG_INTR);
 	else
 		mxs_set(AUART_INTR_TXIEN, s, REG_INTR);
+
+	if (test_bit(MXS_AUART_RS485, &s->flags)){
+		while (mxs_read(s, REG_STAT) & AUART_STAT_BUSY);
+		mxs_set(AUART_CTRL2_RTS, s, REG_CTRL2);
+	}
 
 	if (uart_tx_stopped(&s->port))
 		mxs_auart_stop_tx(&s->port);
@@ -741,12 +757,14 @@ static void mxs_auart_set_mctrl(struct uart_port *u, unsigned mctrl)
 
 	u32 ctrl = mxs_read(s, REG_CTRL2);
 
-	ctrl &= ~(AUART_CTRL2_RTSEN | AUART_CTRL2_RTS);
-	if (mctrl & TIOCM_RTS) {
-		if (uart_cts_enabled(u))
-			ctrl |= AUART_CTRL2_RTSEN;
-		else
-			ctrl |= AUART_CTRL2_RTS;
+	if (!test_bit(MXS_AUART_RS485, &s->flags)){
+		ctrl &= ~(AUART_CTRL2_RTSEN | AUART_CTRL2_RTS);
+		if (mctrl & TIOCM_RTS) {
+			if (uart_cts_enabled(u))
+				ctrl |= AUART_CTRL2_RTSEN;
+			else
+				ctrl |= AUART_CTRL2_RTS;
+		}
 	}
 
 	mxs_write(ctrl, s, REG_CTRL2);
@@ -783,8 +801,10 @@ static u32 mxs_auart_get_mctrl(struct uart_port *u)
 	u32 stat = mxs_read(s, REG_STAT);
 	u32 mctrl = 0;
 
-	if (stat & AUART_STAT_CTS)
-		mctrl |= TIOCM_CTS;
+	if (!test_bit(MXS_AUART_RS485, &s->flags)){
+		if (stat & AUART_STAT_CTS)
+			mctrl |= TIOCM_CTS;
+	}
 
 	return mctrl_gpio_get(s->gpios, &mctrl);
 }
@@ -1052,26 +1072,28 @@ static void mxs_auart_settermios(struct uart_port *u,
 		ctrl |= AUART_LINECTRL_STP2;
 
 	/* figure out the hardware flow control settings */
-	ctrl2 &= ~(AUART_CTRL2_CTSEN | AUART_CTRL2_RTSEN);
-	if (cflag & CRTSCTS) {
-		/*
-		 * The DMA has a bug(see errata:2836) in mx23.
-		 * So we can not implement the DMA for auart in mx23,
-		 * we can only implement the DMA support for auart
-		 * in mx28.
-		 */
-		if (is_imx28_auart(s)
-				&& test_bit(MXS_AUART_RTSCTS, &s->flags)) {
-			if (!mxs_auart_dma_init(s))
-				/* enable DMA tranfer */
-				ctrl2 |= AUART_CTRL2_TXDMAE | AUART_CTRL2_RXDMAE
-				       | AUART_CTRL2_DMAONERR;
+	if (!test_bit(MXS_AUART_RS485, &s->flags)){
+		ctrl2 &= ~(AUART_CTRL2_CTSEN | AUART_CTRL2_RTSEN);
+		if (cflag & CRTSCTS) {
+			/*
+			 * The DMA has a bug(see errata:2836) in mx23.
+			 * So we can not implement the DMA for auart in mx23,
+			 * we can only implement the DMA support for auart
+			 * in mx28.
+			 */
+			if (is_imx28_auart(s)
+					&& test_bit(MXS_AUART_RTSCTS, &s->flags)) {
+				if (!mxs_auart_dma_init(s))
+					/* enable DMA tranfer */
+					ctrl2 |= AUART_CTRL2_TXDMAE | AUART_CTRL2_RXDMAE
+						   | AUART_CTRL2_DMAONERR;
+			}
+			/* Even if RTS is GPIO line RTSEN can be enabled because
+			 * the pinctrl configuration decides about RTS pin function */
+			ctrl2 |= AUART_CTRL2_RTSEN;
+			if (CTS_AT_AUART())
+				ctrl2 |= AUART_CTRL2_CTSEN;
 		}
-		/* Even if RTS is GPIO line RTSEN can be enabled because
-		 * the pinctrl configuration decides about RTS pin function */
-		ctrl2 |= AUART_CTRL2_RTSEN;
-		if (CTS_AT_AUART())
-			ctrl2 |= AUART_CTRL2_CTSEN;
 	}
 
 	/* set baud rate */
@@ -1186,6 +1208,10 @@ static void mxs_auart_reset_deassert(struct mxs_auart_port *s)
 		udelay(3);
 	}
 	mxs_clr(AUART_CTRL0_CLKGATE, s, REG_CTRL0);
+
+	if (test_bit(MXS_AUART_RS485, &s->flags)){
+		mxs_set(AUART_CTRL2_RTS, s, REG_CTRL2);
+	}
 }
 
 static void mxs_auart_reset_assert(struct mxs_auart_port *s)
@@ -1221,7 +1247,7 @@ static int mxs_auart_startup(struct uart_port *u)
 	if (ret)
 		return ret;
 
-	if (uart_console(u)) {
+	if (uart_console(u) || test_bit(MXS_AUART_RS485, &s->flags)) {
 		mxs_clr(AUART_CTRL0_CLKGATE, s, REG_CTRL0);
 	} else {
 		/* reset the unit to a well known state */
@@ -1259,7 +1285,7 @@ static void mxs_auart_shutdown(struct uart_port *u)
 	if (auart_dma_enabled(s))
 		mxs_auart_dma_exit(s);
 
-	if (uart_console(u)) {
+	if (uart_console(u) || test_bit(MXS_AUART_RS485, &s->flags)) {
 		mxs_clr(AUART_CTRL2_UARTEN, s, REG_CTRL2);
 
 		mxs_clr(AUART_INTR_RXIEN | AUART_INTR_RTIEN |
@@ -1574,7 +1600,8 @@ static int serial_mxs_probe_dt(struct mxs_auart_port *s,
 	if (of_get_property(np, "uart-has-rtscts", NULL) ||
 	    of_get_property(np, "fsl,uart-has-rtscts", NULL) /* deprecated */)
 		set_bit(MXS_AUART_RTSCTS, &s->flags);
-
+	if (of_get_property(np, "fsl,rs485-uart", NULL))
+		set_bit(MXS_AUART_RS485, &s->flags);
 	return 0;
 }
 
