@@ -153,11 +153,11 @@
 				clock-frequency = <400000>;
 				status = "okay";
 
-                                eeprom@50 {
-                                        compatible = "atmel,24c32";
-                                        reg = <0x50>;
-                                        read-only;
-                                };
+				eeprom@50 {
+					compatible = "atmel,24c32";
+					reg = <0x50>;
+					read-only;
+				};
 
 				rtc@51 {
 					compatible = "nxp,pcf85063";
