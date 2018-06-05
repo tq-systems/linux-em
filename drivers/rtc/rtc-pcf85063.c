@@ -39,6 +39,12 @@
 #define PCF85063_REG_MO			0x09
 #define PCF85063_REG_YR			0x0A
 
+
+static bool ignore_oscillator_stop;
+module_param(ignore_oscillator_stop, bool, 0644);
+MODULE_PARM_DESC(ignore_oscillator_stop, "Allow reading the time after oscillator instability");
+
+
 static struct i2c_driver pcf85063_driver;
 
 static int pcf85063_stop_clock(struct i2c_client *client, u8 *ctrl1)
@@ -100,7 +106,7 @@ static int pcf85063_get_datetime(struct i2c_client *client, struct rtc_time *tm)
 	}
 
 	/* if the clock has lost its power it makes no sense to use its time */
-	if (regs[0] & PCF85063_REG_SC_OS) {
+	if ((regs[0] & PCF85063_REG_SC_OS) && !ignore_oscillator_stop) {
 		dev_warn(&client->dev, "Power loss detected, invalid time\n");
 		return -EINVAL;
 	}
