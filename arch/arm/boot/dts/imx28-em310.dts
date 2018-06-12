@@ -35,7 +35,6 @@
 				pinctrl-0 = <&mmc0_8bit_pins_a>;
 				bus-width = <8>;
 				non-removable;
-				tqs,dsr = <0x0100>;
 				vmmc-supply = <&reg_vddio_sd0>;
 				status = "okay";
 			};
