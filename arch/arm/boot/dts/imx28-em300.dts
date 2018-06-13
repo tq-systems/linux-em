@@ -94,6 +94,7 @@
 
 				mmc1_sck_cfg: mmc1-sck-cfg {
 					fsl,pinmux-ids = <MX28_PAD_GPMI_WRN__SSP1_SCK>;
+					fsl,drive-strength = <MXS_DRIVE_8mA>;
 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
 				};
 
