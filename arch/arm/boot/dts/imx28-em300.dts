@@ -255,9 +255,10 @@
 			gpios = <&gpio1 23 GPIO_ACTIVE_HIGH>;
 		};
 
-		cms_disable {
-			label = "rs485:cms_disable";
-			gpios = <&gpio3 26 GPIO_ACTIVE_HIGH>;
+		/* Pin: CMS_DISABLE */
+		rs485_enable {
+			label = "energymanager:rs485:enable";
+			gpios = <&gpio3 26 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
 	};

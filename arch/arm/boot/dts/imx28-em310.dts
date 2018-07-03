@@ -278,14 +278,16 @@
 			gpios = <&gpio2 21 GPIO_ACTIVE_HIGH>;
 		};
 
-		vbus_en {
-			label = "rs485:vbus_en";
+		/* Pin: VBUS_EN */
+		rs485_enable {
+			label = "energymanager:rs485:enable";
 			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
 			default-state = "off";
 		};
 
-		vbus_sw {
-			label = "rs485:vbus_sw";
+		/* Pin: VBUS_SW */
+		rs485_bus_voltage {
+			label = "energymanager:rs485:bus_voltage";
 			gpios = <&gpio0 27 GPIO_ACTIVE_HIGH>;
 			default-state = "off";
 		};
