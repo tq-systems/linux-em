@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2014 Michael Heimpold <michael.heimpold@tq-group.com>
- * Copyright (C) 2017 Christoph Krutz <christoph.krutz@tq-group.com>
+ * Copyright (C) 2014-2017 TQ-Systems GmbH <info@tq-group.com>
+ * Authors: Michael Heimpold
+ *          Christoph Krutz <christoph.krutz@tq-group.com>
  *
  * The code contained herein is licensed under the GNU General Public
  * License. You may obtain a copy of the GNU General Public License
