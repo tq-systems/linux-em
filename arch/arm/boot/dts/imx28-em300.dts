@@ -86,14 +86,15 @@
 				fsl,pull-up = <MXS_PULL_ENABLE>;
 				};
 
-				mmc1_cmd_cfg: mmc1-cmd-cfg {
+				mmc1_cmd_cfg: mmc1-cmd-cfg@0 {
+					reg = <0>;
 					fsl,pinmux-ids = <MX28_PAD_GPMI_RDY1__SSP1_CMD>;
 					fsl,drive-strength = <MXS_DRIVE_8mA>;
 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
 					fsl,pull-up = <MXS_PULL_ENABLE>;
 				};
 
-				mmc1_sck_cfg: mmc1-sck-cfg {
+				mmc1_sck_cfg: mmc1-sck-cfg@0 {
 					fsl,pinmux-ids = <MX28_PAD_GPMI_WRN__SSP1_SCK>;
 					fsl,drive-strength = <MXS_DRIVE_8mA>;
 					fsl,voltage = <MXS_VOLTAGE_HIGH>;
