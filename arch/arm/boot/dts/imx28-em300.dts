@@ -260,7 +260,7 @@
 		/* Pin: CMS_DISABLE */
 		rs485_enable {
 			label = "energymanager:rs485:enable";
-			gpios = <&gpio3 26 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio3 26 GPIO_ACTIVE_HIGH>;
 			default-state = "off";
 		};
 	};
