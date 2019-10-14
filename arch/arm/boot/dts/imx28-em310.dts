@@ -60,6 +60,7 @@
 						MX28_PAD_SAIF0_MCLK__GPIO_3_20
 
 						MX28_PAD_GPMI_WRN__GPIO_0_25
+						MX28_PAD_GPMI_ALE__GPIO_0_26
 						MX28_PAD_GPMI_CLE__GPIO_0_27
 					>;
 					fsl,drive-strength = <MXS_DRIVE_8mA>;
