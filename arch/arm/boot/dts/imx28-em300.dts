@@ -62,6 +62,7 @@
 					fsl,pinmux-ids = <
 						MX28_PAD_LCD_D00__GPIO_1_0
 
+						MX28_PAD_SAIF0_SDATA0__GPIO_3_23
 						MX28_PAD_SAIF1_SDATA0__GPIO_3_26
 					>;
 					fsl,drive-strength = <MXS_DRIVE_4mA>;
@@ -274,6 +275,12 @@
 			label = "Reset";
 			gpios = <&gpio0 16 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_RESTART>;
+		};
+
+		rs485_fault {
+			label = "RS485 Fault";
+			gpios = <&gpio3 23 GPIO_ACTIVE_LOW>;
+			linux,code = <BTN_0>;
 		};
 	};
 };
