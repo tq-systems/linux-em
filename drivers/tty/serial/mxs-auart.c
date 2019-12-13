@@ -1244,7 +1244,7 @@ static int mxs_auart_startup(struct uart_port *u)
 	if (ret)
 		return ret;
 
-	if (uart_console(u) || test_bit(MXS_AUART_RS485, &s->flags)) {
+	if (uart_console(u)) {
 		mxs_clr(AUART_CTRL0_CLKGATE, s, REG_CTRL0);
 	} else {
 		/* reset the unit to a well known state */
@@ -1282,7 +1282,7 @@ static void mxs_auart_shutdown(struct uart_port *u)
 	if (auart_dma_enabled(s))
 		mxs_auart_dma_exit(s);
 
-	if (uart_console(u) || test_bit(MXS_AUART_RS485, &s->flags)) {
+	if (uart_console(u)) {
 		mxs_clr(AUART_CTRL2_UARTEN, s, REG_CTRL2);
 
 		mxs_clr(AUART_INTR_RXIEN | AUART_INTR_RTIEN |
