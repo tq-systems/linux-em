@@ -1185,7 +1185,9 @@ static irqreturn_t mxs_auart_irq_handle(int irq, void *context)
 	}
 
 	if (istat & AUART_INTR_TXIS) {
+		spin_lock(&s->port.lock);
 		mxs_auart_tx_chars(s);
+		spin_unlock(&s->port.lock);
 		istat &= ~AUART_INTR_TXIS;
 	}
 
