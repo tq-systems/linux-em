@@ -20,6 +20,7 @@
 #include <linux/errno.h>
 #include <linux/init.h>
 #include <linux/console.h>
+#include <linux/hrtimer.h>
 #include <linux/interrupt.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -47,6 +48,8 @@
 
 #define MXS_AUART_PORTS 5
 #define MXS_AUART_FIFO_SIZE		16
+
+#define MXS_AUART_RS485_RTS_MSECS	1
 
 #define SET_REG				0x4
 #define CLR_REG				0x8
@@ -444,6 +447,8 @@ struct mxs_auart_port {
 	struct dma_chan	*rx_dma_chan;
 	void *rx_dma_buf;
 
+	struct hrtimer rs485_finish_timer;
+
 	struct mctrl_gpios	*gpios;
 	int			gpio_irq[UART_GPIO_MAX];
 	bool			ms_irq_enabled;
@@ -582,6 +587,28 @@ static int mxs_auart_dma_tx(struct mxs_auart_port *s, int size)
 	return 0;
 }
 
+static enum hrtimer_restart mxs_auart_tx_rs485_finish(struct hrtimer *hrtimer)
+{
+	struct mxs_auart_port *s = container_of(hrtimer, struct mxs_auart_port,
+						rs485_finish_timer);
+	unsigned long flags;
+	bool busy;
+
+	spin_lock_irqsave(&s->port.lock, flags);
+
+	busy = mxs_read(s, REG_STAT) & AUART_STAT_BUSY;
+
+	if (busy)
+		hrtimer_forward_now(hrtimer,
+				    ms_to_ktime(MXS_AUART_RS485_RTS_MSECS));
+	else
+		mxs_set(AUART_CTRL2_RTS, s, REG_CTRL2);
+
+	spin_unlock_irqrestore(&s->port.lock, flags);
+
+	return busy ? HRTIMER_RESTART : HRTIMER_NORESTART;
+}
+
 static void mxs_auart_tx_chars(struct mxs_auart_port *s)
 {
 	struct circ_buf *xmit = &s->port.state->xmit;
@@ -647,9 +674,14 @@ static void mxs_auart_tx_chars(struct mxs_auart_port *s)
 		mxs_set(AUART_INTR_TXIEN, s, REG_INTR);
 
 	if (test_bit(MXS_AUART_RS485, &s->flags)) {
-		while (mxs_read(s, REG_STAT) & AUART_STAT_BUSY)
-			;
-		mxs_set(AUART_CTRL2_RTS, s, REG_CTRL2);
+		ktime_t timeout = ms_to_ktime(MXS_AUART_RS485_RTS_MSECS);
+
+		if (!uart_circ_empty(&(s->port.state->xmit)))
+			timeout =
+				ns_to_ktime(jiffies_to_nsecs(s->port.timeout));
+
+		hrtimer_start(&s->rs485_finish_timer, timeout,
+			      HRTIMER_MODE_REL_HARD);
 	}
 
 	if (uart_tx_stopped(&s->port))
@@ -1185,9 +1217,12 @@ static irqreturn_t mxs_auart_irq_handle(int irq, void *context)
 	}
 
 	if (istat & AUART_INTR_TXIS) {
-		spin_lock(&s->port.lock);
+		unsigned long flags;
+
+		spin_lock_irqsave(&s->port.lock, flags);
 		mxs_auart_tx_chars(s);
-		spin_unlock(&s->port.lock);
+		spin_unlock_irqrestore(&s->port.lock, flags);
+
 		istat &= ~AUART_INTR_TXIS;
 	}
 
@@ -1283,6 +1318,8 @@ static void mxs_auart_shutdown(struct uart_port *u)
 
 	if (auart_dma_enabled(s))
 		mxs_auart_dma_exit(s);
+
+	hrtimer_cancel(&s->rs485_finish_timer);
 
 	if (uart_console(u)) {
 		mxs_clr(AUART_CTRL2_UARTEN, s, REG_CTRL2);
@@ -1721,6 +1758,10 @@ static int mxs_auart_probe(struct platform_device *pdev)
 	s->port.fifosize = MXS_AUART_FIFO_SIZE;
 	s->port.uartclk = clk_get_rate(s->clk);
 	s->port.type = PORT_IMX;
+
+	hrtimer_init(&s->rs485_finish_timer, CLOCK_MONOTONIC,
+		     HRTIMER_MODE_REL_HARD);
+	s->rs485_finish_timer.function = mxs_auart_tx_rs485_finish;
 
 	mxs_init_regs(s);
 
