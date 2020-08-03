@@ -758,11 +758,11 @@ static void ksz8795_port_stp_state_set(struct dsa_switch *ds, int port,
 
 static void ksz8795_flush_dyn_mac_table(struct ksz_device *dev, int port)
 {
-	u8 learn[TOTAL_PORT_NUM];
+	u8 *learn = kzalloc(dev->mib_port_cnt, GFP_KERNEL);
 	int first, index, cnt;
 	struct ksz_port *p;
 
-	if ((uint)port < TOTAL_PORT_NUM) {
+	if ((uint)port < dev->mib_port_cnt) {
 		first = port;
 		cnt = port + 1;
 	} else {
@@ -787,6 +787,7 @@ static void ksz8795_flush_dyn_mac_table(struct ksz_device *dev, int port)
 		if (!(learn[index] & PORT_LEARN_DISABLE))
 			ksz_pwrite8(dev, index, P_STP_CTRL, learn[index]);
 	}
+	kfree(learn);
 }
 
 static int ksz8795_port_vlan_filtering(struct dsa_switch *ds, int port,
