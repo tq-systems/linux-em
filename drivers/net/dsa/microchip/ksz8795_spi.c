@@ -49,7 +49,7 @@ static int ksz8795_spi_probe(struct spi_device *spi)
 	if (spi->dev.platform_data)
 		dev->pdata = spi->dev.platform_data;
 
-	ret = ksz8795_switch_register(dev);
+	ret = ksz8_switch_register(dev);
 
 	/* Main DSA driver may not be started yet. */
 	if (ret)
