@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright 2020 TQ Systems GmbH
+ */
+
+#include "imx8mn-em4xx.dtsi"
+
+/ {
+	aliases {
+		mdio-gpio0 = &mdio_gpio0;
+	};
+
+	mdio_gpio0: mdio-gpio {
+		compatible = "microchip,mdio-smi0";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_fec1smi>;
+
+		gpios = <&gpio1 16 GPIO_ACTIVE_HIGH>,
+			<&gpio1 17 GPIO_ACTIVE_HIGH>;
+
+		switch@0 {
+			compatible = "microchip,ksz8863";
+			reg = <0>;
+			reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
+			microchip,internal-rmii-clk;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					label = "lan0";
+				};
+
+				port@1 {
+					reg = <1>;
+					label = "lan1";
+				};
+
+				port@2 {
+					reg = <2>;
+					label = "cpu";
+					ethernet = <&fec1>;
+
+					fixed-link {
+						speed = <100>;
+						full-duplex;
+					};
+				};
+			};
+		};
+	};
+};
+
+&iomuxc {
+	pinctrl_fec1smi: fec1smigrp {
+		fsl,pins = <
+			MX8MN_IOMUXC_ENET_MDC_GPIO1_IO16		0x0
+			MX8MN_IOMUXC_ENET_MDIO_GPIO1_IO17		0x0
+		>;
+	};
+};
+
+&fec1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_fec1>;
+	phy-mode = "rmii";
+	status = "okay";
+
+	fixedphy: fixed-link {
+		speed = <100>;
+		full-duplex;
+	};
+};
