@@ -217,6 +217,11 @@ static int ksz_is_87(struct ksz_device *dev)
 	return (((dev->chip_id) >> 8) == KSZ87_FAMILY_ID);
 }
 
+static int ksz_is_88(struct ksz_device *dev)
+{
+	return (((dev->chip_id) >> 8) == KSZ88_FAMILY_ID);
+}
+
 static int ksz8_reset_switch(struct ksz_device *dev)
 {
 	if (ksz_is_87(dev)) {
@@ -1360,6 +1365,10 @@ static int ksz8_setup(struct dsa_switch *ds)
 		return ret;
 	}
 
+	if (ksz_is_88(dev))
+		ksz_cfg(dev, KSZ8863_REG_HOST_MODE, KSZ8863_INTERNAL_RMII_CLK,
+			dev->internal_rmii_clk);
+
 	ksz_cfg(dev, S_REPLACE_VID_CTRL, SW_FLOW_CTRL, true);
 
 	/* Enable automatic fast aging when link changed detected. */
@@ -1582,6 +1591,11 @@ static int ksz8_switch_init(struct ksz_device *dev)
 		ksz8->masks = &ksz8863_masks;
 		ksz8->shifts = &ksz8863_shifts;
 		dev->mib_cnt = TOTAL_KSZ8863_COUNTER_NUM;
+
+		if (dev->dev->of_node)
+			dev->internal_rmii_clk =
+				of_property_read_bool(dev->dev->of_node,
+						      "microchip,internal-rmii-clk");
 	}
 
 	dev->port_mask = BIT(dev->port_cnt) - 1;
