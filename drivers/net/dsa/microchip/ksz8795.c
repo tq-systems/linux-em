@@ -1365,9 +1365,15 @@ static int ksz8_setup(struct dsa_switch *ds)
 		return ret;
 	}
 
-	if (ksz_is_88(dev))
+	if (ksz_is_88(dev)) {
 		ksz_cfg(dev, KSZ8863_REG_HOST_MODE, KSZ8863_INTERNAL_RMII_CLK,
 			dev->internal_rmii_clk);
+
+		if (dev->drive_strength)
+			ksz_cfg(dev, KSZ8863_REG_GLOBAL_CTRL_12,
+				KSZ8863_DRIVE_STRENGTH,
+				dev->drive_strength == 16);
+	}
 
 	ksz_cfg(dev, S_REPLACE_VID_CTRL, SW_FLOW_CTRL, true);
 
@@ -1592,10 +1598,27 @@ static int ksz8_switch_init(struct ksz_device *dev)
 		ksz8->shifts = &ksz8863_shifts;
 		dev->mib_cnt = TOTAL_KSZ8863_COUNTER_NUM;
 
-		if (dev->dev->of_node)
+		if (dev->dev->of_node) {
 			dev->internal_rmii_clk =
 				of_property_read_bool(dev->dev->of_node,
 						      "microchip,internal-rmii-clk");
+
+			if (!of_property_read_u32(dev->dev->of_node,
+						  "microchip,drive-strength",
+						  &dev->drive_strength)) {
+				switch (dev->drive_strength) {
+				case 8:
+				case 16:
+					break;
+
+				default:
+					dev_err(dev->dev,
+						"invalid drive strength %d\n",
+						dev->drive_strength);
+					return -EINVAL;
+				}
+			}
+		}
 	}
 
 	dev->port_mask = BIT(dev->port_cnt) - 1;

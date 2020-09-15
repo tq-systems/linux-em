@@ -77,6 +77,7 @@ struct ksz_device {
 	bool phy_errata_9477;
 	bool synclko_125;
 	bool internal_rmii_clk;
+	u32 drive_strength;
 
 	struct vlan_table *vlan_cache;
 
