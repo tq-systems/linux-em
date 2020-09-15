@@ -21,9 +21,12 @@ Required properties:
 
 Optional properties:
 
-- reset-gpios		: Should be a gpio specifier for a reset line
-- microchip,synclko-125 : Set if the output SYNCLKO frequency should be set to
-			  125MHz instead of 25MHz.
+- reset-gpios		      : Should be a gpio specifier for a reset line
+- microchip,synclko-125       : Set if the output SYNCLKO frequency should be
+				set to 125MHz instead of 25MHz.
+- microchip,internal-rmii-clk : Source port 3 RMII clock from internal clock
+				generator instead of REFCLKI_3 pin. Supported
+				on KSZ88xx only.
 
 See Documentation/devicetree/bindings/net/dsa/dsa.txt for a list of additional
 required and optional properties.
