@@ -25,6 +25,8 @@
 		serial2 = &auart0;
 		/delete-property/ serial3;
 		/delete-property/ serial4;
+
+		mdio-gpio0 = &mdio_gpio0;
 	};
 
 	memory {
@@ -110,6 +112,51 @@
 		};
 	};
 
+	mdio_gpio0: mdio-gpio {
+		compatible = "microchip,mdio-smi0";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&mac0_smi_pins_a>;
+
+		gpios = <&gpio4 0 GPIO_ACTIVE_HIGH>,
+			<&gpio4 1 GPIO_ACTIVE_HIGH>;
+
+		switch@0 {
+			compatible = "microchip,ksz8863";
+			reg = <0>;
+			reset-gpios = <&gpio0 7 GPIO_ACTIVE_LOW>;
+			reset-deassert-us = <100000>;
+			microchip,internal-rmii-clk;
+			microchip,drive-strength = <8>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					label = "lan0";
+				};
+
+				port@1 {
+					reg = <1>;
+					label = "lan1";
+				};
+
+				port@2 {
+					reg = <2>;
+					label = "cpu";
+					ethernet = <&mac0>;
+
+					fixed-link {
+						speed = <100>;
+						full-duplex;
+					};
+				};
+			};
+		};
+	};
 };
 
 &ssp0 {
@@ -213,9 +260,6 @@
 	mac0_pins_a: mac0@0 {
 		reg = <0>;
 		fsl,pinmux-ids = <
-			MX28_PAD_ENET0_MDC__GPIO_4_0  /* ENET.MDC */
-			MX28_PAD_ENET0_MDIO__GPIO_4_1 /* ENET.MDIO */
-			MX28_PAD_GPMI_D06__GPIO_0_6   /* ENET.INT# */
 			MX28_PAD_ENET0_RX_EN__ENET0_RX_EN
 			MX28_PAD_ENET0_RXD0__ENET0_RXD0
 			MX28_PAD_ENET0_RXD1__ENET0_RXD1
@@ -223,6 +267,19 @@
 			MX28_PAD_ENET0_TXD0__ENET0_TXD0
 			MX28_PAD_ENET0_TXD1__ENET0_TXD1
 			MX28_PAD_ENET_CLK__CLKCTRL_ENET
+		>;
+		fsl,drive-strength = <MXS_DRIVE_8mA>;
+		fsl,voltage = <MXS_VOLTAGE_HIGH>;
+		fsl,pull-up = <MXS_PULL_ENABLE>;
+	};
+
+	mac0_smi_pins_a: mac0-smi@0 {
+		reg = <0>;
+		fsl,pinmux-ids = <
+			MX28_PAD_ENET0_MDC__GPIO_4_0  /* ENET.MDC */
+			MX28_PAD_ENET0_MDIO__GPIO_4_1 /* ENET.MDIO */
+			MX28_PAD_GPMI_D06__GPIO_0_6   /* ENET.INT# */
+			MX28_PAD_GPMI_D07__GPIO_0_7   /* ENET.RST# */
 		>;
 		fsl,drive-strength = <MXS_DRIVE_8mA>;
 		fsl,voltage = <MXS_VOLTAGE_HIGH>;
@@ -306,11 +363,12 @@
 	phy-mode = "rmii";
 	pinctrl-names = "default";
 	pinctrl-0 = <&mac0_pins_a>;
-	phy-supply = <&reg_3p3v>;
-	phy-reset-gpios = <&gpio0 7 0>;
-	phy-reset-duration = <100>;
 	clocks = <&clks 57>, <&clks 57>;
 	clock-names = "ipg", "ahb";
-	fixed-link = <1 1 100 0 0>;
 	status = "okay";
+
+	fixedphy: fixed-link {
+		speed = <100>;
+		full-duplex;
+	};
 };
