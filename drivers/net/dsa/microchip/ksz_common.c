@@ -419,6 +419,7 @@ EXPORT_SYMBOL(ksz_switch_alloc);
 int ksz_switch_register(struct ksz_device *dev,
 			const struct ksz_dev_ops *ops)
 {
+	u32 assert_delay, deassert_delay;
 	int ret;
 
 	if (dev->pdata)
@@ -429,11 +430,29 @@ int ksz_switch_register(struct ksz_device *dev,
 	if (IS_ERR(dev->reset_gpio))
 		return PTR_ERR(dev->reset_gpio);
 
+	/* Host port interface will be self detected, or specifically set in
+	 * device tree.
+	 */
+	if (dev->dev->of_node) {
+		if (of_property_read_u32(dev->dev->of_node, "reset-assert-us",
+					 &assert_delay))
+			assert_delay = 10000;
+		if (of_property_read_u32(dev->dev->of_node, "reset-deassert-us",
+					 &deassert_delay))
+			deassert_delay = 100;
+
+		ret = of_get_phy_mode(dev->dev->of_node);
+		if (ret >= 0)
+			dev->interface = ret;
+		dev->synclko_125 = of_property_read_bool(dev->dev->of_node,
+							 "microchip,synclko-125");
+	}
+
 	if (dev->reset_gpio) {
 		gpiod_set_value_cansleep(dev->reset_gpio, 1);
-		usleep_range(10000, 12000);
+		usleep_range(assert_delay, assert_delay + 2000);
 		gpiod_set_value_cansleep(dev->reset_gpio, 0);
-		usleep_range(100, 1000);
+		usleep_range(deassert_delay, deassert_delay + 1000);
 	}
 
 	mutex_init(&dev->dev_mutex);
@@ -449,17 +468,6 @@ int ksz_switch_register(struct ksz_device *dev,
 	ret = dev->dev_ops->init(dev);
 	if (ret)
 		return ret;
-
-	/* Host port interface will be self detected, or specifically set in
-	 * device tree.
-	 */
-	if (dev->dev->of_node) {
-		ret = of_get_phy_mode(dev->dev->of_node);
-		if (ret >= 0)
-			dev->interface = ret;
-		dev->synclko_125 = of_property_read_bool(dev->dev->of_node,
-							 "microchip,synclko-125");
-	}
 
 	ret = dsa_register_switch(dev->ds);
 	if (ret) {
