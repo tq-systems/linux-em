@@ -96,20 +96,6 @@
 			label = "energymanager:red:sensor";
 			gpios = <&gpio2 21 GPIO_ACTIVE_HIGH>;
 		};
-
-		/* Pin: VBUS_EN */
-		rs485_enable {
-			label = "energymanager:rs485:enable";
-			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
-			default-state = "off";
-		};
-
-		/* Pin: VBUS_SW */
-		rs485_bus_voltage {
-			label = "energymanager:rs485:bus_voltage";
-			gpios = <&gpio0 27 GPIO_ACTIVE_HIGH>;
-			default-state = "off";
-		};
 	};
 
 	buttons {
@@ -121,12 +107,6 @@
 			label = "Reset";
 			gpios = <&gpio3 4 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_RESTART>;
-		};
-
-		rs485_fault {
-			label = "RS485 Fault";
-			gpios = <&gpio0 26 GPIO_ACTIVE_LOW>;
-			linux,code = <BTN_0>;
 		};
 	};
 
@@ -164,8 +144,11 @@
 		fsl,pinmux-ids = <
 			MX28_PAD_SAIF0_MCLK__GPIO_3_20
 
+			/* energymanager:vbus:enable (VBUS_EN) */
 			MX28_PAD_GPMI_WRN__GPIO_0_25
+			/* energymanager:vbus:fault# (VBUS_FAULT#) */
 			MX28_PAD_GPMI_ALE__GPIO_0_26
+			/* VBUS_SW */
 			MX28_PAD_GPMI_CLE__GPIO_0_27
 		>;
 		fsl,drive-strength = <MXS_DRIVE_8mA>;
@@ -244,6 +227,25 @@
 		fsl,drive-strength = <MXS_DRIVE_8mA>;
 		fsl,voltage = <MXS_VOLTAGE_HIGH>;
 		fsl,pull-up = <MXS_PULL_ENABLE>;
+	};
+};
+
+&gpio0 {
+	gpio-line-names =
+		"", "", "", "",
+		"", "", "", "",
+		"", "", "", "",
+		"", "", "", "",
+		"", "", "", "",
+		"", "", "", "",
+		"", "energymanager:vbus:enable", "energymanager:vbus:fault#", "",
+		"", "", "", "";
+
+	vbus_sw {
+		gpio-hog;
+		gpios = <27 0>;
+		output-low;
+		line-name = "energymanager:vbus:sw";
 	};
 };
 
