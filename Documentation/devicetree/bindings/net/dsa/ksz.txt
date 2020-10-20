@@ -8,6 +8,8 @@ Required properties:
   - "microchip,ksz8765"
   - "microchip,ksz8794"
   - "microchip,ksz8795"
+  - "microchip,ksz8863"
+  - "microchip,ksz8873"
   - "microchip,ksz9477"
   - "microchip,ksz9897"
   - "microchip,ksz9896"
@@ -19,9 +21,17 @@ Required properties:
 
 Optional properties:
 
-- reset-gpios		: Should be a gpio specifier for a reset line
-- microchip,synclko-125 : Set if the output SYNCLKO frequency should be set to
-			  125MHz instead of 25MHz.
+- reset-gpios		      : Should be a gpio specifier for a reset line
+- microchip,synclko-125       : Set if the output SYNCLKO frequency should be
+				set to 125MHz instead of 25MHz.
+- microchip,internal-rmii-clk : Source port 3 RMII clock from internal clock
+				generator instead of REFCLKI_3 pin. Supported
+				on KSZ88xx only.
+- microchip,drive-strength    : Drive strength in mA. Supported on KSZ88xx only.
+				Valid values are 8 and 16. If not specified, the
+				drive strength is not set (defaulting to 8mA,
+				unless it is modified by the bootloader and no
+				reset-gpios is given).
 
 See Documentation/devicetree/bindings/net/dsa/dsa.txt for a list of additional
 required and optional properties.

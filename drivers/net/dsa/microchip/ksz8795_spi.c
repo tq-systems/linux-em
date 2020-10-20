@@ -14,34 +14,70 @@
 #include <linux/regmap.h>
 #include <linux/spi/spi.h>
 
+#include "ksz8.h"
 #include "ksz_common.h"
 
-#define SPI_ADDR_SHIFT			12
-#define SPI_ADDR_ALIGN			3
-#define SPI_TURNAROUND_SHIFT		1
+#define KSZ8795_SPI_ADDR_SHIFT			12
+#define KSZ8795_SPI_ADDR_ALIGN			3
+#define KSZ8795_SPI_TURNAROUND_SHIFT		1
 
-KSZ_REGMAP_TABLE(ksz8795, 16, SPI_ADDR_SHIFT,
-		 SPI_TURNAROUND_SHIFT, SPI_ADDR_ALIGN);
+#define KSZ8863_SPI_ADDR_SHIFT			8
+#define KSZ8863_SPI_ADDR_ALIGN			8
+#define KSZ8863_SPI_TURNAROUND_SHIFT		0
+
+KSZ_REGMAP_TABLE(ksz8795, 16, KSZ8795_SPI_ADDR_SHIFT,
+		 KSZ8795_SPI_TURNAROUND_SHIFT, KSZ8795_SPI_ADDR_ALIGN);
+
+KSZ_REGMAP_TABLE(ksz8863, 16, KSZ8863_SPI_ADDR_SHIFT,
+		 KSZ8863_SPI_TURNAROUND_SHIFT, KSZ8863_SPI_ADDR_ALIGN);
+
+static const struct of_device_id ksz8795_dt_ids[] = {
+	{ .compatible = "microchip,ksz8765", .data = &ksz8795_regmap_config },
+	{ .compatible = "microchip,ksz8794", .data = &ksz8795_regmap_config },
+	{ .compatible = "microchip,ksz8795", .data = &ksz8795_regmap_config },
+	{ .compatible = "microchip,ksz8863", .data = &ksz8863_regmap_config },
+	{ .compatible = "microchip,ksz8873", .data = &ksz8863_regmap_config },
+	{},
+};
+MODULE_DEVICE_TABLE(of, ksz8795_dt_ids);
 
 static int ksz8795_spi_probe(struct spi_device *spi)
 {
+	const struct regmap_config *regmap_config;
+	const struct of_device_id *match;
+	struct device *ddev = &spi->dev;
+	struct ksz8 *ksz8;
 	struct regmap_config rc;
 	struct ksz_device *dev;
-	int i, ret;
+	int i, ret = 0;
 
-	dev = ksz_switch_alloc(&spi->dev, spi);
+	ksz8 = devm_kzalloc(&spi->dev, sizeof(struct ksz8), GFP_KERNEL);
+	ksz8->priv = spi;
+
+	dev = ksz_switch_alloc(&spi->dev, ksz8);
 	if (!dev)
 		return -ENOMEM;
 
+	regmap_config = ksz8795_regmap_config;
+
+	if (ddev->of_node) {
+		match = of_match_node(ksz8795_dt_ids, ddev->of_node);
+		if (!match)
+			return -ENOTSUPP;
+
+		if (match->data)
+			regmap_config = match->data;
+	}
+
 	for (i = 0; i < ARRAY_SIZE(ksz8795_regmap_config); i++) {
-		rc = ksz8795_regmap_config[i];
+		rc = regmap_config[i];
 		rc.lock_arg = &dev->regmap_mutex;
 		dev->regmap[i] = devm_regmap_init_spi(spi, &rc);
 		if (IS_ERR(dev->regmap[i])) {
 			ret = PTR_ERR(dev->regmap[i]);
 			dev_err(&spi->dev,
 				"Failed to initialize regmap%i: %d\n",
-				ksz8795_regmap_config[i].val_bits, ret);
+				regmap_config[i].val_bits, ret);
 			return ret;
 		}
 	}
@@ -49,7 +85,7 @@ static int ksz8795_spi_probe(struct spi_device *spi)
 	if (spi->dev.platform_data)
 		dev->pdata = spi->dev.platform_data;
 
-	ret = ksz8795_switch_register(dev);
+	ret = ksz8_switch_register(dev);
 
 	/* Main DSA driver may not be started yet. */
 	if (ret)
@@ -77,14 +113,6 @@ static void ksz8795_spi_shutdown(struct spi_device *spi)
 	if (dev && dev->dev_ops->shutdown)
 		dev->dev_ops->shutdown(dev);
 }
-
-static const struct of_device_id ksz8795_dt_ids[] = {
-	{ .compatible = "microchip,ksz8765" },
-	{ .compatible = "microchip,ksz8794" },
-	{ .compatible = "microchip,ksz8795" },
-	{},
-};
-MODULE_DEVICE_TABLE(of, ksz8795_dt_ids);
 
 static struct spi_driver ksz8795_spi_driver = {
 	.driver = {
