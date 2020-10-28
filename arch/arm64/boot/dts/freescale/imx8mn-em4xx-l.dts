@@ -25,6 +25,7 @@
 			reg = <0>;
 			reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
 			microchip,internal-rmii-clk;
+			microchip,drive-strength = <8>;
 
 			ports {
 				#address-cells = <1>;
