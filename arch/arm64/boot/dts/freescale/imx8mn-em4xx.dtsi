@@ -9,7 +9,7 @@
 
 / {
 	model = "TQ Systems GmbH i.MX8MN on EM4XX-CB";
-	compatible = "tq,imx8mn-em4xx", "fsl,imx8mn";
+	compatible = "tq,em4xx", "fsl,imx8mn";
 
 	aliases {
 		mmc0 = &usdhc3;
