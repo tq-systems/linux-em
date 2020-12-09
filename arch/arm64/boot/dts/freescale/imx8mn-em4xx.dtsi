@@ -96,6 +96,10 @@
 	};
 };
 
+&cpu_crit0 {
+	temperature = <105000>;
+};
+
 &gpio1 {
 	gpio-line-names =
 		"", "", "", "",
