@@ -229,7 +229,7 @@
 		fsl,pins = <
 			MX8MN_IOMUXC_UART2_RXD_UART2_DCE_RX	0x0
 			MX8MN_IOMUXC_UART2_TXD_UART2_DCE_TX	0x0
-			MX8MN_IOMUXC_SAI3_RXD_GPIO4_IO30	0x0
+			MX8MN_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B	0x0
 		>;
 	};
 
@@ -237,7 +237,7 @@
 		fsl,pins = <
 			MX8MN_IOMUXC_UART3_RXD_UART3_DCE_RX	0x0
 			MX8MN_IOMUXC_UART3_TXD_UART3_DCE_TX	0x0
-			MX8MN_IOMUXC_ECSPI1_SS0_GPIO5_IO9	0x0
+			MX8MN_IOMUXC_SD1_STROBE_UART3_DCE_CTS_B	0x0
 		>;
 	};
 
@@ -343,7 +343,9 @@
 &uart2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart2>;
-	rts-gpios = <&gpio4 30 GPIO_ACTIVE_HIGH>;
+	dmas = <&sdma1 24 4 0>, <&sdma1 25 4 0>;
+	dma-names = "rx", "tx";
+	uart-has-rtscts;
 	linux,rs485-enabled-at-boot-time;
 	status = "okay";
 };
@@ -351,7 +353,7 @@
 &uart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart3>;
-	rts-gpios = <&gpio5 9 GPIO_ACTIVE_HIGH>;
+	uart-has-rtscts;
 	linux,rs485-enabled-at-boot-time;
 	status = "okay";
 };
