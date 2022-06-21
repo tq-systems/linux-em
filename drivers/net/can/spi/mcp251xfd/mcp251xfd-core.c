@@ -2127,7 +2127,8 @@ static int mcp251xfd_probe(struct spi_device *spi)
 	return err;
 }
 
-static void mcp251xfd_remove(struct spi_device *spi)
+/* Linux 5.4.44: struct spi_driver member .remove is of type int */
+static int mcp251xfd_remove(struct spi_device *spi)
 {
 	struct mcp251xfd_priv *priv = spi_get_drvdata(spi);
 	struct net_device *ndev = priv->ndev;
@@ -2136,6 +2137,8 @@ static void mcp251xfd_remove(struct spi_device *spi)
 	mcp251xfd_unregister(priv);
 	spi->max_speed_hz = priv->spi_max_speed_hz_orig;
 	free_candev(ndev);
+
+	return 0;
 }
 
 static int __maybe_unused mcp251xfd_runtime_suspend(struct device *device)

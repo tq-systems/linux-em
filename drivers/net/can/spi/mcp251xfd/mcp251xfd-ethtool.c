@@ -11,11 +11,11 @@
 #include "mcp251xfd.h"
 #include "mcp251xfd-ram.h"
 
+/* Linux 5.4.44: struct ethtool_ops defines these member funtions
+ * without struct kernel_ethtool_ringparam and struct netlink_ext_ack */
 static void
 mcp251xfd_ring_get_ringparam(struct net_device *ndev,
-			     struct ethtool_ringparam *ring,
-			     struct kernel_ethtool_ringparam *kernel_ring,
-			     struct netlink_ext_ack *extack)
+			     struct ethtool_ringparam *ring)
 {
 	const struct mcp251xfd_priv *priv = netdev_priv(ndev);
 	const bool fd_mode = mcp251xfd_is_fd_mode(priv);
@@ -31,9 +31,7 @@ mcp251xfd_ring_get_ringparam(struct net_device *ndev,
 
 static int
 mcp251xfd_ring_set_ringparam(struct net_device *ndev,
-			     struct ethtool_ringparam *ring,
-			     struct kernel_ethtool_ringparam *kernel_ring,
-			     struct netlink_ext_ack *extack)
+			     struct ethtool_ringparam *ring)
 {
 	struct mcp251xfd_priv *priv = netdev_priv(ndev);
 	const bool fd_mode = mcp251xfd_is_fd_mode(priv);
@@ -53,9 +51,7 @@ mcp251xfd_ring_set_ringparam(struct net_device *ndev,
 }
 
 static int mcp251xfd_ring_get_coalesce(struct net_device *ndev,
-				       struct ethtool_coalesce *ec,
-				       struct kernel_ethtool_coalesce *kec,
-				       struct netlink_ext_ack *ext_ack)
+				       struct ethtool_coalesce *ec)
 {
 	struct mcp251xfd_priv *priv = netdev_priv(ndev);
 	u32 rx_max_frames, tx_max_frames;
@@ -83,9 +79,7 @@ static int mcp251xfd_ring_get_coalesce(struct net_device *ndev,
 }
 
 static int mcp251xfd_ring_set_coalesce(struct net_device *ndev,
-				       struct ethtool_coalesce *ec,
-				       struct kernel_ethtool_coalesce *kec,
-				       struct netlink_ext_ack *ext_ack)
+				       struct ethtool_coalesce *ec)
 {
 	struct mcp251xfd_priv *priv = netdev_priv(ndev);
 	const bool fd_mode = mcp251xfd_is_fd_mode(priv);
@@ -116,10 +110,6 @@ static int mcp251xfd_ring_set_coalesce(struct net_device *ndev,
 }
 
 static const struct ethtool_ops mcp251xfd_ethtool_ops = {
-	.supported_coalesce_params = ETHTOOL_COALESCE_RX_USECS_IRQ |
-		ETHTOOL_COALESCE_RX_MAX_FRAMES_IRQ |
-		ETHTOOL_COALESCE_TX_USECS_IRQ |
-		ETHTOOL_COALESCE_TX_MAX_FRAMES_IRQ,
 	.get_ringparam = mcp251xfd_ring_get_ringparam,
 	.set_ringparam = mcp251xfd_ring_set_ringparam,
 	.get_coalesce = mcp251xfd_ring_get_coalesce,

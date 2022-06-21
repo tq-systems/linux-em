@@ -64,7 +64,7 @@ mcp251xfd_tx_obj_from_skb(const struct mcp251xfd_priv *priv,
 	if (cfd->can_id & CAN_RTR_FLAG)
 		flags |= MCP251XFD_OBJ_FLAGS_RTR;
 	else
-		len_sanitized = canfd_sanitize_len(cfd->len);
+		len_sanitized = can_dlc2len(can_len2dlc(cfd->len));
 
 	/* CANFD */
 	if (can_is_canfd_skb(skb)) {
@@ -76,7 +76,7 @@ mcp251xfd_tx_obj_from_skb(const struct mcp251xfd_priv *priv,
 		if (cfd->flags & CANFD_BRS)
 			flags |= MCP251XFD_OBJ_FLAGS_BRS;
 
-		dlc = can_fd_len2dlc(cfd->len);
+		dlc = can_len2dlc(cfd->len);
 	} else {
 		dlc = can_get_cc_dlc((struct can_frame *)cfd,
 				     priv->can.ctrlmode);
@@ -187,10 +187,17 @@ netdev_tx_t mcp251xfd_start_xmit(struct sk_buff *skb,
 	if (mcp251xfd_get_tx_free(tx_ring) == 0)
 		netif_stop_queue(ndev);
 
-	frame_len = can_skb_get_frame_len(skb);
-	err = can_put_echo_skb(skb, ndev, tx_head, frame_len);
-	if (!err)
-		netdev_sent_queue(priv->ndev, frame_len);
+	/*
+	 * See revert commit 2afe72ead5ab672c8012bda83cbe65f8145568e0
+	 * can_get/put_echo_skb() not fixed with frame_len in Linux 5.4
+	 *
+	 * frame_len = can_skb_get_frame_len(skb);
+	 * err = can_put_echo_skb(skb, ndev, tx_head, frame_len);
+	 * if (!err)
+	 *	netdev_sent_queue(priv->ndev, frame_len);
+	 *
+	 */
+	can_put_echo_skb(skb, ndev, tx_head);
 
 	err = mcp251xfd_tx_obj_write(priv, tx_obj);
 	if (err)

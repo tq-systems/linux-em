@@ -112,8 +112,7 @@ mcp251xfd_handle_tefif_one(struct mcp251xfd_priv *priv,
 		mcp251xfd_skb_set_timestamp(priv, skb, hw_tef_obj->ts);
 	stats->tx_bytes +=
 		can_rx_offload_get_echo_skb(&priv->offload,
-					    tef_tail, hw_tef_obj->ts,
-					    frame_len_ptr);
+					    tef_tail, hw_tef_obj->ts);
 	stats->tx_packets++;
 	priv->tef->tail++;
 
@@ -239,7 +238,12 @@ int mcp251xfd_handle_tefif(struct mcp251xfd_priv *priv)
 			return err;
 
 		tx_ring->tail += len;
-		netdev_completed_queue(priv->ndev, len, total_frame_len);
+		/*
+		 * See revert commit 2afe72ead5ab672c8012bda83cbe65f8145568e0
+		 * can_get/put_echo_skb() not fixed with frame_len in Linux 5.4
+		 *
+		 * netdev_completed_queue(priv->ndev, len, total_frame_len);
+		 */
 
 		err = mcp251xfd_check_tef_tail(priv);
 		if (err)

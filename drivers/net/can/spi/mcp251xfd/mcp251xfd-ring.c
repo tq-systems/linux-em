@@ -93,8 +93,8 @@ mcp251xfd_ring_init_tef(struct mcp251xfd_priv *priv, u16 *base)
 		xfer->tx_buf = &tef_ring->uinc_buf;
 		xfer->len = len;
 		xfer->cs_change = 1;
-		xfer->cs_change_delay.value = 0;
-		xfer->cs_change_delay.unit = SPI_DELAY_UNIT_NSECS;
+		xfer->cs_change_delay = 0;
+		xfer->cs_change_delay_unit = SPI_DELAY_UNIT_NSECS;
 	}
 
 	/* "cs_change == 1" on the last transfer results in an active
@@ -142,8 +142,8 @@ mcp251xfd_tx_ring_init_tx_obj(const struct mcp251xfd_priv *priv,
 	xfer->tx_buf = &tx_obj->buf;
 	xfer->len = 0;	/* actual len is assigned on the fly */
 	xfer->cs_change = 1;
-	xfer->cs_change_delay.value = 0;
-	xfer->cs_change_delay.unit = SPI_DELAY_UNIT_NSECS;
+	xfer->cs_change_delay = 0;
+	xfer->cs_change_delay_unit = SPI_DELAY_UNIT_NSECS;
 
 	/* FIFO request to send */
 	xfer = &tx_obj->xfer[1];
@@ -226,8 +226,8 @@ mcp251xfd_ring_init_rx(struct mcp251xfd_priv *priv, u16 *base, u8 *fifo_nr)
 			xfer->tx_buf = &rx_ring->uinc_buf;
 			xfer->len = len;
 			xfer->cs_change = 1;
-			xfer->cs_change_delay.value = 0;
-			xfer->cs_change_delay.unit = SPI_DELAY_UNIT_NSECS;
+			xfer->cs_change_delay = 0;
+			xfer->cs_change_delay_unit = SPI_DELAY_UNIT_NSECS;
 		}
 
 		/* "cs_change == 1" on the last transfer results in an
@@ -281,7 +281,12 @@ int mcp251xfd_ring_init(struct mcp251xfd_priv *priv)
 	u8 fifo_nr = 1;
 	int i;
 
-	netdev_reset_queue(priv->ndev);
+	/*
+	 * See revert commit 2afe72ead5ab672c8012bda83cbe65f8145568e0
+	 * can_get/put_echo_skb() not fixed with frame_len in Linux 5.4
+	 *
+	 * netdev_reset_queue(priv->ndev);
+	 */
 
 	mcp251xfd_ring_init_tef(priv, &base);
 	mcp251xfd_ring_init_rx(priv, &base, &fifo_nr);
