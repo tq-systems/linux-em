@@ -374,16 +374,14 @@ static int pcf85063_load_capacitance(struct pcf85063 *pcf85063,
 		break;
 	}
 
-	return regmap_update_bits(pcf85063->regmap, PCF85063_REG_CTRL1,
-				  PCF85063_REG_CTRL1_CAP_SEL, reg);
+	/* use regmap_write to implicitly clear other (possibly faulty)
+	 * control bits during setup of CAP_SEL */
+	return regmap_write(pcf85063->regmap, PCF85063_REG_CTRL1, reg);
 }
 
 static const struct reg_sequence pcf85063_default_ctrl[] = {
-	/* CAP_SEL set via pcf85063_load_capacitance() */
-	{ PCF85063_REG_CTRL1,  0x00 },
 	/* clear AF */
 	{ PCF85063_REG_CTRL2,  0x00 },
-	{ PCF85063_REG_OFFSET, 0x00 },
 };
 
 static const struct reg_sequence pcf85063_default_alarms[] = {
