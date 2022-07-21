@@ -51,7 +51,14 @@
 #define PCF85063_REG_SC_OS		0x80
 
 #define PCF85063_REG_ALM_S		0x0b
+#define PCF85063_REG_ALM_M		0x0c
+#define PCF85063_REG_ALM_H		0x0d
+#define PCF85063_REG_ALM_D		0x0e
+#define PCF85063_REG_ALM_W		0x0f
 #define PCF85063_AEN			BIT(7)
+
+#define PCF85063_REG_TIMER		0x11
+#define PCF85063_TIMER_TCF_11		0x18
 
 static bool ignore_oscillator_stop;
 module_param(ignore_oscillator_stop, bool, 0644);
@@ -373,9 +380,25 @@ static int pcf85063_load_capacitance(struct pcf85063 *pcf85063,
 		break;
 	}
 
-	return regmap_update_bits(pcf85063->regmap, PCF85063_REG_CTRL1,
-				  PCF85063_REG_CTRL1_CAP_SEL, reg);
+	/* use regmap_write to implicitly clear other (possibly faulty)
+	 * control bits during setup of CAP_SEL */
+	return regmap_write(pcf85063->regmap, PCF85063_REG_CTRL1, reg);
 }
+
+static const struct reg_sequence pcf85063_default_ctrl[] = {
+	/* clear AF */
+	{ PCF85063_REG_CTRL2,  0x00 },
+};
+
+static const struct reg_sequence pcf85063_default_alarms[] = {
+	/* Default values from datasheet */
+	{ PCF85063_REG_ALM_S,  PCF85063_AEN },
+	{ PCF85063_REG_ALM_M,  PCF85063_AEN },
+	{ PCF85063_REG_ALM_H,  PCF85063_AEN },
+	{ PCF85063_REG_ALM_D,  PCF85063_AEN },
+	{ PCF85063_REG_ALM_W,  PCF85063_AEN },
+	{ PCF85063_REG_TIMER,  PCF85063_TIMER_TCF_11 },
+};
 
 static const struct pcf85063_config pcf85063a_config = {
 	.regmap = {
@@ -444,6 +467,22 @@ static int pcf85063_probe(struct i2c_client *client)
 	pcf85063->rtc = devm_rtc_allocate_device(&client->dev);
 	if (IS_ERR(pcf85063->rtc))
 		return PTR_ERR(pcf85063->rtc);
+
+	/* According to data sheet, power-on reset could lead to
+	 * corrupt register contents. In order to clean possible
+	 * dirty bits, set predefined default values
+	 */
+	err = regmap_register_patch(pcf85063->regmap,
+				    pcf85063_default_ctrl,
+				    ARRAY_SIZE(pcf85063_default_ctrl));
+	if (!err && config->has_alarms)
+		err = regmap_register_patch(pcf85063->regmap,
+					    pcf85063_default_alarms,
+					    ARRAY_SIZE(pcf85063_default_alarms));
+	if (err)
+		dev_warn(&client->dev, "failed to set defaults: %d\n", err);
+	else
+		dev_dbg(&client->dev, "defaults set\n");
 
 	err = pcf85063_load_capacitance(pcf85063, client->dev.of_node,
 					config->force_cap_7000 ? 7000 : 0);

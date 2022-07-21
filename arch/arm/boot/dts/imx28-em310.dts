@@ -326,6 +326,7 @@
 	rtc@51 {
 		compatible = "nxp,pcf85063";
 		reg = <0x51>;
+		quartz-load-femtofarads = <12500>;
 	};
 };
 
