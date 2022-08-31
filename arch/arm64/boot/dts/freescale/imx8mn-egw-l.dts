@@ -34,29 +34,29 @@
 	leds-eebus {
 		compatible = "gpio-leds";
 
-		status_red {
-			label = "energymanager:red_br:status";
+		red_br {
+			label = "egw:red_br";
 			gpios = <&port_io 1 GPIO_ACTIVE_HIGH>;
 		};
 
-		network_red {
-			label = "energymanager:red_dk:network";
+		red_dk {
+			label = "egw:red_dk";
 			gpios = <&port_io 2 GPIO_ACTIVE_HIGH>;
 		};
 
-		status_green {
-			label = "energymanager:green_br:status";
+		green_br {
+			label = "egw:green_br";
 			gpios = <&port_io 3 GPIO_ACTIVE_HIGH>;
 		};
 
-		network_green {
-			label = "energymanager:green_dk:network";
+		green_dk {
+			label = "egw:green_dk";
 			gpios = <&port_io 4 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "default-on";
 		};
 
-		sensor_red {
-			label = "energymanager:blue:sensor";
+		blue {
+			label = "egw:blue";
 			gpios = <&port_io 5 GPIO_ACTIVE_HIGH>;
 		};
 	};
