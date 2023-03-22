@@ -152,6 +152,7 @@
 		spi-max-frequency = <10000000>;
 		spi-cs-high;
 		interrupt-controller;
+		regcache-refresh-cycle-ms = <5000>;
 	};
 };
 

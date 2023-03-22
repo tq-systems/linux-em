@@ -142,6 +142,8 @@ struct regmap {
 	bool cache_dirty;
 	/* if set, the HW registers are known to match map->reg_defaults */
 	bool no_sync_defaults;
+	struct delayed_work refresh_dwork;
+	unsigned int refresh_cycle_ms;
 
 	struct reg_sequence *patch;
 	int patch_regs;
@@ -293,5 +295,8 @@ static inline unsigned int regcache_get_index_by_order(const struct regmap *map,
 {
 	return reg >> map->reg_stride_order;
 }
+
+#define REGCACHE_REFRESH_MIN_MS 100
+#define REGCACHE_REFRESH_MAX_MS 10000
 
 #endif
