@@ -152,6 +152,8 @@ struct regmap {
 	bool cache_dirty;
 	/* if set, the HW registers are known to match map->reg_defaults */
 	bool no_sync_defaults;
+	struct delayed_work refresh_dwork;
+	unsigned int refresh_cycle_ms;
 
 	struct reg_sequence *patch;
 	int patch_regs;
