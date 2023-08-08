@@ -70,6 +70,7 @@ struct pcf85063 {
 #ifdef CONFIG_COMMON_CLK
 	struct clk_hw		clkout_hw;
 #endif
+	bool			ignore_oscillator_stop;
 };
 
 static int pcf85063_rtc_read_time(struct device *dev, struct rtc_time *tm)
@@ -93,7 +94,8 @@ static int pcf85063_rtc_read_time(struct device *dev, struct rtc_time *tm)
 	if (regs[0] & PCF85063_REG_SC_OS) {
 		dev_warn_once(&pcf85063->rtc->dev,
 			      "Power loss detected, invalid time\n");
-		return -EINVAL;
+		if (!pcf85063->ignore_oscillator_stop)
+			return -EINVAL;
 	}
 
 	tm->tm_sec = bcd2bin(regs[0] & 0x7F);
@@ -596,6 +598,9 @@ static int pcf85063_probe(struct i2c_client *client)
 	if (err < 0)
 		dev_warn(&client->dev, "failed to set xtal load capacitance: %d",
 			 err);
+
+	pcf85063->ignore_oscillator_stop =
+		of_property_read_bool(client->dev.of_node, "ignore-oscillator-stop");
 
 	pcf85063->rtc->ops = &pcf85063_rtc_ops;
 	pcf85063->rtc->range_min = RTC_TIMESTAMP_BEGIN_2000;
