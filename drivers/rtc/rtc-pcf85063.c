@@ -58,6 +58,10 @@
 #define PCF85063_REG_ALM_S		0x0b
 #define PCF85063_AEN			BIT(7)
 
+static bool ignore_oscillator_stop;
+module_param(ignore_oscillator_stop, bool, 0644);
+MODULE_PARM_DESC(ignore_oscillator_stop, "Allow reading the time after oscillator instability");
+
 struct pcf85063_config {
 	struct regmap_config regmap;
 	unsigned has_alarms:1;
@@ -92,7 +96,8 @@ static int pcf85063_rtc_read_time(struct device *dev, struct rtc_time *tm)
 	/* if the clock has lost its power it makes no sense to use its time */
 	if (regs[0] & PCF85063_REG_SC_OS) {
 		dev_warn(&pcf85063->rtc->dev, "Power loss detected, invalid time\n");
-		return -EINVAL;
+		if (!ignore_oscillator_stop)
+			return -EINVAL;
 	}
 
 	tm->tm_sec = bcd2bin(regs[0] & 0x7F);
