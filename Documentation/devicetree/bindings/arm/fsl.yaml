@@ -103,6 +103,11 @@ properties:
           - const: i2se,duckbill-2
           - const: fsl,imx28
 
+      - description: TQ-Systems i.MX28 based board EM310
+        items:
+          - const: tq,em310
+          - const: fsl,imx28
+
       - description: i.MX31 based Boards
         items:
           - enum:
