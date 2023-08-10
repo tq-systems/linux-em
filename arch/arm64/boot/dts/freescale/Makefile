@@ -79,6 +79,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-dev.dtb
 dtb-$(CONFIG_ARCH_MXC) += imx8mn-beacon-kit.dtb
 dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2.dtb
 dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2pro.dtb
+dtb-$(CONFIG_ARCH_MXC) += imx8mn-egw-l.dtb
 dtb-$(CONFIG_ARCH_MXC) += imx8mn-em4xx-l-ksz8863.dtb
 dtb-$(CONFIG_ARCH_MXC) += imx8mn-em4xx-l-mv88e6020.dtb
 dtb-$(CONFIG_ARCH_MXC) += imx8mn-em4xx-u.dtb

@@ -1,0 +1,241 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (c) 2023 - 2024 TQ-Systems GmbH <linux@ew.tq-group.com>,
+ * D-82229 Seefeld, Germany.
+ * Author: Michael Krummsdorf
+ */
+
+/dts-v1/;
+
+#include "imx8mn-em4xx.dtsi"
+
+/ {
+	model = "TQ-Systems EEBUS-GW-LC/L";
+	compatible = "tq,egw", "fsl,imx8mn";
+
+	buttons {
+		/delete-property/ pinctrl-names;
+		/delete-property/ pinctrl-0;
+		/delete-node/ reset-button;
+
+		button-1 {
+			label = "button1";
+			gpios = <&port_io 7 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_1>;
+		};
+
+		button-2 {
+			label = "button2";
+			gpios = <&port_io 6 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_2>;
+		};
+	};
+
+	can0_osc: clock-can0 {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <40000000>;
+	};
+
+	leds {
+		/delete-node/ led1-gn;
+		/delete-node/ led1-rd;
+		/delete-node/ led2-gn;
+		/delete-node/ led2-rd;
+		/delete-node/ led3-gn;
+		/delete-node/ led3-rd;
+
+		led-red-br {
+			gpios = <&port_io 1 GPIO_ACTIVE_HIGH>;
+			label = "egw:red_br";
+		};
+
+		led-red-dk {
+			gpios = <&port_io 2 GPIO_ACTIVE_HIGH>;
+			label = "egw:red_dk";
+		};
+
+		led-green-br {
+			gpios = <&port_io 3 GPIO_ACTIVE_HIGH>;
+			label = "egw:green_br";
+		};
+
+		led-green-dk {
+			gpios = <&port_io 4 GPIO_ACTIVE_HIGH>;
+			label = "egw:green_dk";
+			linux,default-trigger = "default-on";
+		};
+
+		led-blue {
+			gpios = <&port_io 5 GPIO_ACTIVE_HIGH>;
+			label = "egw:blue";
+		};
+
+		led-eth1 {
+			gpios = <&gpio4 29 GPIO_ACTIVE_HIGH>;
+			label = "eth1";
+			linux,default-trigger = "netdev";
+		};
+
+		led-eth2 {
+			gpios = <&gpio2 11 GPIO_ACTIVE_HIGH>;
+			label = "eth2";
+		};
+	};
+
+	reg_can_3v3: regulator-can-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "CAN_3V3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+};
+
+&ecspi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi1>, <&pinctrl_ecspi1_ss1>;
+	/* SS0 -> CAN_SS#, MB_PWR_EN# -> PORT-IO_SS1 */
+	cs-gpios = <&gpio5 17 GPIO_ACTIVE_LOW>, <&gpio4 21 GPIO_ACTIVE_LOW>;
+	num-cs = <2>;
+	status = "okay";
+
+	can@0 {
+		compatible = "microchip,mcp2518fd";
+		reg = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_can>;
+		clocks = <&can0_osc>;
+		/* MB_RFU1 - CAN_INT */
+		interrupt-parent = <&gpio5>;
+		interrupts = <19 IRQ_TYPE_LEVEL_LOW>;
+		spi-max-frequency = <17000000>;
+		termination-gpios = <&port_io 0 GPIO_ACTIVE_LOW>;
+		termination-ohms = <56>;
+		vdd-supply = <&reg_can_3v3>;
+		xceiver-supply = <&reg_can_3v3>;
+		/* UART3_RX - CAN_INT1 */
+		microchip,rx-int-gpios = <&gpio5 26 GPIO_ACTIVE_LOW>;
+		/* Only placed on prototype devices */
+		status = "disabled";
+	};
+
+	port_io: gpio@1 {
+		compatible = "microchip,mcp23s08";
+		reg = <1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_portio>;
+		interrupt-parent = <&gpio5>;
+		interrupts = <20 IRQ_TYPE_LEVEL_LOW>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		/* MB_RFU2 - PORT-IO_INT */
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		regcache-refresh-cycle-ms = <5000>;
+		/* spi-max-frequency <= 10 MHz */
+		spi-max-frequency = <10000000>;
+		microchip,spi-present-mask = <0x1>;
+	};
+};
+
+&fec1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_fec1>,
+		    <&pinctrl_fec1mdio>,
+		    <&pinctrl_enet_irq>,
+		    <&pinctrl_enet_reset>,
+		    <&pinctrl_enet_led>;
+	phy-connection-type = "rmii";
+	phy-handle = <&ethphy0>;
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethphy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-ieee802.3-c22";
+			reg = <0>;
+			interrupt-parent = <&gpio1>;
+			interrupts = <29 IRQ_TYPE_LEVEL_LOW>;
+			reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
+			reset-assert-us = <50>;
+			reset-deassert-us = <2000>;
+		};
+	};
+};
+
+&iomuxc {
+	pinctrl_can: cangrp {
+		fsl,pins = <
+			/* MB_RFU1 - CAN_INT */
+			MX8MN_IOMUXC_I2C3_SDA_GPIO5_IO19		INPUT_PAD_CTRL
+			/* UART3_RX - CAN_INT1 */
+			MX8MN_IOMUXC_UART3_RXD_GPIO5_IO26		INPUT_PAD_CTRL
+		>;
+	};
+
+	pinctrl_ecspi1_ss1: ecspi1ss1grp {
+		fsl,pins = <
+			/* MB_PWR_EN# - PORT-IO_SS1 */
+			MX8MN_IOMUXC_SAI2_RXFS_GPIO4_IO21		OUTPUT_PAD_CTRL
+		>;
+	};
+
+	pinctrl_enet_led: enetledgrp {
+		fsl,pins = <
+			MX8MN_IOMUXC_SAI3_RXC_GPIO4_IO29		OUTPUT_PAD_CTRL
+			MX8MN_IOMUXC_SD1_STROBE_GPIO2_IO11		OUTPUT_PAD_CTRL
+		>;
+	};
+
+	pinctrl_portio: portiogrp {
+		fsl,pins = <
+			/* MB_RFU2 - PORT-IO_INT */
+			MX8MN_IOMUXC_I2C4_SCL_GPIO5_IO20		INPUT_PAD_CTRL
+		>;
+	};
+
+	pinctrl_uart2: uart2grp {
+		fsl,pins = <
+			/* EMS_UART1_TX */
+			MX8MN_IOMUXC_UART2_TXD_UART2_DCE_TX		OUTPUT_PAD_CTRL
+			/* EMS_UART1_RX */
+			MX8MN_IOMUXC_UART2_RXD_UART2_DCE_RX		INPUT_PAD_CTRL
+		>;
+	};
+
+	pinctrl_uart3: uart3grp {
+		fsl,pins = <
+			/* EMS_UART2_TX */
+			MX8MN_IOMUXC_UART3_TXD_UART3_DCE_TX		OUTPUT_PAD_CTRL
+		>;
+	};
+};
+
+&uart2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart2>;
+	/* EMS-Bus: Do not enable DMA mode due to missing data bytes */
+	/delete-property/ dmas;
+	/delete-property/ dma-names;
+	/* EM4xx RS485 mode not required */
+	/delete-property/ uart-has-rtscts;
+	/delete-property/ linux,rs485-enabled-at-boot-time;
+	/delete-property/ rs485-rx-during-tx;
+	status = "okay";
+};
+
+&uart3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart3>;
+	/* EMS-Bus: Do not enable DMA mode due to missing data bytes */
+	/delete-property/ dmas;
+	/delete-property/ dma-names;
+	/* EM4xx RS485 mode not required */
+	/delete-property/ uart-has-rtscts;
+	/delete-property/ linux,rs485-enabled-at-boot-time;
+	/delete-property/ rs485-rx-during-tx;
+	status = "okay";
+};
