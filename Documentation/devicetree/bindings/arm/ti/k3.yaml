@@ -43,6 +43,7 @@ properties:
               - beagle,am625-beagleplay
               - ti,am625-sk
               - ti,am62-lp-sk
+              - tq,am625-em-cb30
           - const: ti,am625
 
       - description: K3 AM62x SoC Toradex Verdin Modules and Carrier Boards
