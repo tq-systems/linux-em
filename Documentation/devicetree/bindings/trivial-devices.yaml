@@ -403,6 +403,8 @@ properties:
           - ti,tps544b25
           - ti,tps544c20
           - ti,tps544c25
+            # Teridian 71M6545 with TQ-Systems Energy Manager firmware on SPI
+          - tq,teridian
             # Winbond/Nuvoton H/W Monitor
           - winbond,w83793
             # Vicor Corporation Digital Supervisor
