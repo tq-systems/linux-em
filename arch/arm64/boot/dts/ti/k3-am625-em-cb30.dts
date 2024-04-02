@@ -385,6 +385,10 @@
 	status = "okay";
 };
 
+&wkup_rtc0 {
+	status = "disabled";
+};
+
 &main_pmx0 {
 	button_pins: button-pins {
 		pinctrl-single,pins = <
