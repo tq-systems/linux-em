@@ -1,0 +1,90 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (c) 2023 - 2024 TQ-Systems GmbH <linux@ew.tq-group.com>,
+ * D-82229 Seefeld, Germany.
+ * Author: Michael Krummsdorf
+ */
+
+/dts-v1/;
+
+#include "imx8mn-em4xx.dtsi"
+
+/ {
+	aliases {
+		ethernet1 = &lan1;
+		mdio-gpio0 = &mdio_gpio0;
+	};
+
+	mdio_gpio0: mdio {
+		compatible = "microchip,mdio-smi0";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_fec1smi>,
+			    <&pinctrl_enet_irq>,
+			    <&pinctrl_enet_reset>;
+
+		gpios = <&gpio1 16 GPIO_ACTIVE_HIGH>,
+			<&gpio1 17 GPIO_ACTIVE_HIGH>;
+
+		switch@0 {
+			compatible = "microchip,ksz8863";
+			reg = <0>;
+			interrupt-parent = <&gpio1>;
+			interrupts = <29 IRQ_TYPE_LEVEL_LOW>;
+			reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
+			microchip,io-drive-strength-microamp = <8000>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				lan0: port@0 {
+					reg = <0>;
+					label = "lan0";
+					phy-mode = "internal";
+				};
+
+				lan1: port@1 {
+					reg = <1>;
+					label = "lan1";
+					phy-mode = "internal";
+				};
+
+				port@2 {
+					reg = <2>;
+					label = "cpu";
+					ethernet = <&fec1>;
+					phy-mode = "rmii";
+					microchip,rmii-clk-internal;
+
+					fixed-link {
+						speed = <100>;
+						full-duplex;
+					};
+				};
+			};
+		};
+	};
+};
+
+&fec1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_fec1>;
+	phy-connection-type = "rmii";
+	status = "okay";
+
+	fixed-link {
+		speed = <100>;
+		full-duplex;
+	};
+};
+
+&iomuxc {
+	pinctrl_fec1smi: fec1smigrp {
+		fsl,pins = <
+			MX8MN_IOMUXC_ENET_MDC_GPIO1_IO16		OUTPUT_PAD_CTRL
+			MX8MN_IOMUXC_ENET_MDIO_GPIO1_IO17		INPUT_PAD_CTRL
+		>;
+	};
+};

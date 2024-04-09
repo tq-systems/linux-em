@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (c) 2023 - 2024 TQ-Systems GmbH <linux@ew.tq-group.com>,
+ * D-82229 Seefeld, Germany.
+ * Author: Michael Krummsdorf
+ */
+
+/dts-v1/;
+
+#include "imx8mn-em4xx.dtsi"
+
+&fec1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_fec1>,
+		    <&pinctrl_fec1mdio>,
+		    <&pinctrl_enet_reset>,
+		    <&pinctrl_enet_irq>;
+	phy-connection-type = "rmii";
+	phy-handle = <&ethphy0>;
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethphy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-ieee802.3-c22";
+			reg = <0>;
+			interrupt-parent = <&gpio1>;
+			interrupts = <29 IRQ_TYPE_LEVEL_LOW>;
+			reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
+			reset-assert-us = <50>;
+			reset-deassert-us = <2000>;
+		};
+	};
+};
+
+&usbotg1 {
+	dr_mode = "host";
+	disable-over-current;
+	status = "okay";
+};

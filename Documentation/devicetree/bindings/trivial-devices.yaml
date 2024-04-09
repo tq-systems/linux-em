@@ -379,6 +379,8 @@ properties:
           - ti,tps544b25
           - ti,tps544c20
           - ti,tps544c25
+            # TQ Teridian chip on Energy Manager
+          - tq,teridian
             # Winbond/Nuvoton H/W Monitor
           - winbond,w83793
             # Vicor Corporation Digital Supervisor

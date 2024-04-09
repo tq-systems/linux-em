@@ -9,11 +9,15 @@
 #include <linux/bsearch.h>
 #include <linux/device.h>
 #include <linux/export.h>
+#include <linux/property.h>
 #include <linux/slab.h>
 #include <linux/sort.h>
 
 #include "trace.h"
 #include "internal.h"
+
+#define REGCACHE_REFRESH_MIN_MS 100
+#define REGCACHE_REFRESH_MAX_MS 10000
 
 static const struct regcache_ops *cache_types[] = {
 	&regcache_rbtree_ops,
@@ -112,11 +116,27 @@ err_free:
 	return ret;
 }
 
+static void regcache_hw_refresh(struct work_struct *work)
+{
+	struct regmap *map = container_of(work, struct regmap, refresh_dwork.work);
+	int ret;
+
+	dev_dbg(map->dev, "Register refresh\n");
+	regcache_mark_dirty(map);
+	ret = regcache_sync(map);
+	if (ret)
+		dev_err(map->dev, "Failed to refresh registers: %d\n", ret);
+
+	schedule_delayed_work(&map->refresh_dwork,
+			      msecs_to_jiffies(map->refresh_cycle_ms));
+}
+
 int regcache_init(struct regmap *map, const struct regmap_config *config)
 {
 	int ret;
 	int i;
 	void *tmp_buf;
+	u32 val;
 
 	if (map->cache_type == REGCACHE_NONE) {
 		if (config->reg_defaults || config->num_reg_defaults_raw)
@@ -199,6 +219,17 @@ int regcache_init(struct regmap *map, const struct regmap_config *config)
 		if (ret)
 			goto err_free;
 	}
+
+	INIT_DELAYED_WORK(&map->refresh_dwork, regcache_hw_refresh);
+	if (map->dev && !device_property_read_u32(map->dev, "regcache-refresh-cycle-ms", &val)) {
+		map->refresh_cycle_ms = clamp_t(unsigned int, val,
+						REGCACHE_REFRESH_MIN_MS,
+						REGCACHE_REFRESH_MAX_MS);
+		dev_notice(map->dev, "Refreshing cached registers in device every %d ms\n",
+			   map->refresh_cycle_ms);
+		schedule_delayed_work(&map->refresh_dwork, msecs_to_jiffies(map->refresh_cycle_ms));
+	}
+
 	return 0;
 
 err_free:
@@ -213,6 +244,8 @@ void regcache_exit(struct regmap *map)
 {
 	if (map->cache_type == REGCACHE_NONE)
 		return;
+
+	cancel_delayed_work_sync(&map->refresh_dwork);
 
 	BUG_ON(!map->cache_ops);
 

@@ -103,6 +103,11 @@ properties:
           - const: i2se,duckbill-2
           - const: fsl,imx28
 
+      - description: TQ-Systems i.MX28 based board EM310
+        items:
+          - const: tq,em310
+          - const: fsl,imx28
+
       - description: i.MX31 based Boards
         items:
           - enum:
@@ -923,6 +928,20 @@ properties:
           - enum:
               - tq,imx8mn-tqma8mqnl-mba8mx # TQ-Systems GmbH i.MX8MN TQMa8MQNL SOM on MBa8Mx
           - const: tq,imx8mn-tqma8mqnl     # TQ-Systems GmbH i.MX8MN TQMa8MQNL SOM
+          - const: fsl,imx8mn
+
+      - description:
+          TQ-Systems Energy Manager i.MX8MN based board EM4xx
+        items:
+          - const: tq,em4xx
+          - const: fsl,imx8mn
+
+      - description:
+          TQ-Systems Energy Manager i.MX8MN based board EGW
+        items:
+          - enum:
+              - tq,egw
+          - const: tq,em4xx
           - const: fsl,imx8mn
 
       - description: i.MX8MP based Boards

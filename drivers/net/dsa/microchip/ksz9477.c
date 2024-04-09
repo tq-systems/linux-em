@@ -60,11 +60,6 @@ int ksz9477_change_mtu(struct ksz_device *dev, int port, int mtu)
 				  REG_SW_MTU_MASK, max_frame);
 }
 
-int ksz9477_max_mtu(struct ksz_device *dev, int port)
-{
-	return KSZ9477_MAX_FRAME_SIZE - VLAN_ETH_HLEN - ETH_FCS_LEN;
-}
-
 static int ksz9477_wait_vlan_ctrl_ready(struct ksz_device *dev)
 {
 	unsigned int val;
@@ -195,7 +190,8 @@ int ksz9477_reset_switch(struct ksz_device *dev)
 
 	/* KSZ9893 compatible chips do not support refclk configuration */
 	if (dev->chip_id == KSZ9893_CHIP_ID ||
-	    dev->chip_id == KSZ8563_CHIP_ID)
+	    dev->chip_id == KSZ8563_CHIP_ID ||
+	    dev->chip_id == KSZ9563_CHIP_ID)
 		return 0;
 
 	data8 = SW_ENABLE_REFCLKO;
@@ -1141,6 +1137,8 @@ int ksz9477_setup(struct dsa_switch *ds)
 {
 	struct ksz_device *dev = ds->priv;
 	int ret = 0;
+
+	ds->mtu_enforcement_ingress = true;
 
 	/* Required for port partitioning. */
 	ksz9477_cfg32(dev, REG_SW_QM_CTRL__4, UNICAST_VLAN_BOUNDARY,

@@ -76,6 +76,57 @@ int ksz8_reset_switch(struct ksz_device *dev)
 	return 0;
 }
 
+static int ksz8863_change_mtu(struct ksz_device *dev, int frame_size)
+{
+	u8 ctrl2 = 0;
+
+	if (frame_size <= KSZ8_LEGAL_PACKET_SIZE)
+		ctrl2 |= KSZ8863_LEGAL_PACKET_ENABLE;
+	else if (frame_size > KSZ8863_NORMAL_PACKET_SIZE)
+		ctrl2 |= KSZ8863_HUGE_PACKET_ENABLE;
+
+	return ksz_rmw8(dev, REG_SW_CTRL_2, KSZ8863_LEGAL_PACKET_ENABLE |
+			KSZ8863_HUGE_PACKET_ENABLE, ctrl2);
+}
+
+static int ksz8795_change_mtu(struct ksz_device *dev, int frame_size)
+{
+	u8 ctrl1 = 0, ctrl2 = 0;
+	int ret;
+
+	if (frame_size > KSZ8_LEGAL_PACKET_SIZE)
+		ctrl2 |= SW_LEGAL_PACKET_DISABLE;
+	else if (frame_size > KSZ8863_NORMAL_PACKET_SIZE)
+		ctrl1 |= SW_HUGE_PACKET;
+
+	ret = ksz_rmw8(dev, REG_SW_CTRL_1, SW_HUGE_PACKET, ctrl1);
+	if (ret)
+		return ret;
+
+	return ksz_rmw8(dev, REG_SW_CTRL_2, SW_LEGAL_PACKET_DISABLE, ctrl2);
+}
+
+int ksz8_change_mtu(struct ksz_device *dev, int port, int mtu)
+{
+	u16 frame_size;
+
+	if (!dsa_is_cpu_port(dev->ds, port))
+		return 0;
+
+	frame_size = mtu + VLAN_ETH_HLEN + ETH_FCS_LEN;
+
+	switch (dev->chip_id) {
+	case KSZ8795_CHIP_ID:
+	case KSZ8794_CHIP_ID:
+	case KSZ8765_CHIP_ID:
+		return ksz8795_change_mtu(dev, frame_size);
+	case KSZ8830_CHIP_ID:
+		return ksz8863_change_mtu(dev, frame_size);
+	}
+
+	return -EOPNOTSUPP;
+}
+
 static void ksz8795_set_prio_queue(struct ksz_device *dev, int port, int queue)
 {
 	u8 hi, lo;
@@ -1029,6 +1080,18 @@ int ksz8_mdb_del(struct ksz_device *dev, int port,
 	return ksz8_del_sta_mac(dev, port, mdb->addr, mdb->vid);
 }
 
+int ksz8_fdb_add(struct ksz_device *dev, int port, const unsigned char *addr,
+		 u16 vid, struct dsa_db db)
+{
+	return ksz8_add_sta_mac(dev, port, addr, vid);
+}
+
+int ksz8_fdb_del(struct ksz_device *dev, int port, const unsigned char *addr,
+		 u16 vid, struct dsa_db db)
+{
+	return ksz8_del_sta_mac(dev, port, addr, vid);
+}
+
 int ksz8_port_vlan_filtering(struct ksz_device *dev, int port, bool flag,
 			     struct netlink_ext_ack *extack)
 {
@@ -1206,6 +1269,9 @@ static void ksz8795_cpu_interface_select(struct ksz_device *dev, int port)
 {
 	struct ksz_port *p = &dev->ports[port];
 
+	if (!ksz_is_ksz87xx(dev))
+		return;
+
 	if (!p->interface && dev->compat_interface) {
 		dev_warn(dev->dev,
 			 "Using legacy switch \"phy-mode\" property, because it is missing on port %d node. "
@@ -1239,16 +1305,27 @@ void ksz8_port_setup(struct ksz_device *dev, int port, bool cpu_port)
 	/* enable 802.1p priority */
 	ksz_port_cfg(dev, port, P_PRIO_CTRL, PORT_802_1P_ENABLE, true);
 
-	if (cpu_port) {
-		if (!ksz_is_ksz88x3(dev))
-			ksz8795_cpu_interface_select(dev, port);
-
+	if (cpu_port)
 		member = dsa_user_ports(ds);
-	} else {
+	else
 		member = BIT(dsa_upstream_port(ds, port));
-	}
 
 	ksz8_cfg_port_member(dev, port, member);
+}
+
+static void ksz88x3_config_rmii_clk(struct ksz_device *dev)
+{
+	struct dsa_port *cpu_dp = dsa_to_port(dev->ds, dev->cpu_port);
+	bool rmii_clk_internal;
+
+	if (!ksz_is_ksz88x3(dev))
+		return;
+
+	rmii_clk_internal = of_property_read_bool(cpu_dp->dn,
+						  "microchip,rmii-clk-internal");
+
+	ksz_cfg(dev, KSZ88X3_REG_FVID_AND_HOST_MODE,
+		KSZ88X3_PORT3_RMII_CLK_INTERNAL, rmii_clk_internal);
 }
 
 void ksz8_config_cpu_port(struct dsa_switch *ds)
@@ -1263,14 +1340,15 @@ void ksz8_config_cpu_port(struct dsa_switch *ds)
 	masks = dev->info->masks;
 	regs = dev->info->regs;
 
-	/* Switch marks the maximum frame with extra byte as oversize. */
-	ksz_cfg(dev, REG_SW_CTRL_2, SW_LEGAL_PACKET_DISABLE, true);
 	ksz_cfg(dev, regs[S_TAIL_TAG_CTRL], masks[SW_TAIL_TAG_ENABLE], true);
 
 	p = &dev->ports[dev->cpu_port];
 	p->on = 1;
 
 	ksz8_port_setup(dev, dev->cpu_port, true);
+
+	ksz8795_cpu_interface_select(dev, dev->cpu_port);
+	ksz88x3_config_rmii_clk(dev);
 
 	for (i = 0; i < dev->phy_port_cnt; i++) {
 		p = &dev->ports[i];
@@ -1337,6 +1415,8 @@ int ksz8_setup(struct dsa_switch *ds)
 {
 	struct ksz_device *dev = ds->priv;
 	int i;
+
+	ds->mtu_enforcement_ingress = true;
 
 	ksz_cfg(dev, S_REPLACE_VID_CTRL, SW_FLOW_CTRL, true);
 
