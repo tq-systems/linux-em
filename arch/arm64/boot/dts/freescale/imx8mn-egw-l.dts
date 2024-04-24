@@ -95,8 +95,8 @@
 &ecspi1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi1>, <&pinctrl_ecspi1_ss1>;
-	/* SS0 -> CAN_SS#, MB_PWR_EN# -> PORT-IO_SS1 */
-	cs-gpios = <&gpio5 17 GPIO_ACTIVE_LOW>, <&gpio4 21 GPIO_ACTIVE_LOW>;
+	/* SS0 -> CAN_SS#, MB_PWR_EN -> PORT-IO_SS1 (inverted) */
+	cs-gpios = <&gpio5 17 GPIO_ACTIVE_LOW>, <&gpio4 21 GPIO_ACTIVE_HIGH>;
 	num-cs = <2>;
 	status = "okay";
 
@@ -133,7 +133,7 @@
 		interrupt-controller;
 		#interrupt-cells = <2>;
 		regcache-refresh-cycle-ms = <5000>;
-		/* spi-max-frequency <= 10 MHz */
+		spi-cs-high;
 		spi-max-frequency = <10000000>;
 		microchip,spi-present-mask = <0x1>;
 	};
@@ -212,6 +212,10 @@
 			MX8MN_IOMUXC_UART3_TXD_UART3_DCE_TX		OUTPUT_PAD_CTRL
 		>;
 	};
+};
+
+&teridian {
+	status = "disabled";
 };
 
 &uart2 {

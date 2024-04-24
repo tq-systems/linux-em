@@ -101,9 +101,11 @@
 	cs-gpios = <&gpio5 17 GPIO_ACTIVE_LOW>;
 	status = "okay";
 
-	spidev@0 {
+	teridian: sensor@0 {
 		compatible = "tq,teridian";
 		reg = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_teridian>;
 		spi-max-frequency = <1000000>;
 	};
 };
@@ -411,8 +413,6 @@
 
 	pinctrl_gpio4: gpio4grp {
 		fsl,pins = <
-			/* MB_PWR_EN# */
-			MX8MN_IOMUXC_SAI2_RXFS_GPIO4_IO21		INPUT_PAD_CTRL
 			/* HW.VER0 */
 			MX8MN_IOMUXC_SAI2_RXC_GPIO4_IO22		INPUT_PAD_CTRL
 			/* HW.VER1 */
@@ -451,6 +451,13 @@
 	pinctrl_pmic: pmicirqgrp {
 		fsl,pins = <
 			MX8MN_IOMUXC_GPIO1_IO08_GPIO1_IO8		INPUT_PAD_CTRL
+		>;
+	};
+
+	pinctrl_teridian: teridiangrp {
+		fsl,pins = <
+			/* MB_PWR_EN# */
+			MX8MN_IOMUXC_SAI2_RXFS_GPIO4_IO21		INPUT_PAD_CTRL
 		>;
 	};
 
