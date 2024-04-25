@@ -436,7 +436,7 @@
 	main_gpio0_pins: main-gpio0-pins {
 		pinctrl-single,pins = <
 			/* (L25) GPMC0_WEn.GPIO0_34 - V_5_RS485_FAULT# */
-			AM62X_IOPAD(0x08c, PIN_OUTPUT, 7)
+			AM62X_IOPAD(0x08c, PIN_INPUT, 7)
 			/* (V25) GPMC0_WAIT1.GPIO0_38 - MB_PWR_EN# */
 			AM62X_IOPAD(0x09c, PIN_OUTPUT, 7)
 			/* (K25) GPMC0_WPn.GPIO0_39 - V_5_RS485_EN */
