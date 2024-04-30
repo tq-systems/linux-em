@@ -172,7 +172,7 @@
 	status = "okay";
 
 	cpsw3g_phy0: ethernet-phy@0 {
-		compatible = "ethernet-phy-ieee802.3-c22";
+		compatible = "ethernet-phy-id2000.a140", "ethernet-phy-ieee802.3-c22";
 		reg = <0x0>;
 		interrupts-extended = <&main_gpio1 44 IRQ_TYPE_EDGE_FALLING>;
 		reset-gpios = <&main_gpio1 43 GPIO_ACTIVE_LOW>;
@@ -181,7 +181,7 @@
 	};
 
 	cpsw3g_phy1: ethernet-phy@1 {
-		compatible = "ethernet-phy-ieee802.3-c22";
+		compatible = "ethernet-phy-id2000.a140", "ethernet-phy-ieee802.3-c22";
 		reg = <0x1>;
 		interrupts-extended = <&main_gpio1 5 IRQ_TYPE_EDGE_FALLING>;
 		reset-gpios = <&main_gpio1 0 GPIO_ACTIVE_LOW>;
