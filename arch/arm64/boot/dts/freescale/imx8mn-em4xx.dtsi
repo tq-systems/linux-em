@@ -458,7 +458,7 @@
 	pinctrl_teridian: teridiangrp {
 		fsl,pins = <
 			/* MB_PWR_EN# */
-			MX8MN_IOMUXC_SAI2_RXFS_GPIO4_IO21		INPUT_PAD_CTRL
+			MX8MN_IOMUXC_SAI2_RXFS_GPIO4_IO21		OUTPUT_PAD_CTRL
 		>;
 	};
 
