@@ -17,6 +17,7 @@
 	compatible = "tq,em310", "fsl,imx28";
 
 	aliases {
+		rtc0 = &pcf85063tp;
 		spi0 = &ssp3;
 
 		serial0 = &duart;
@@ -264,7 +265,7 @@
 		vcc-supply = <&reg_3p3v>;
 	};
 
-	rtc@51 {
+	pcf85063tp: rtc@51 {
 		compatible = "nxp,pcf85063tp";
 		reg = <0x51>;
 		quartz-load-femtofarads = <12500>;
@@ -287,6 +288,10 @@
 		speed = <100>;
 		full-duplex;
 	};
+};
+
+&mxs_rtc {
+	status = "disabled";
 };
 
 &pinctrl {
