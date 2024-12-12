@@ -1881,11 +1881,6 @@ int ksz8_setup(struct dsa_switch *ds)
 
 	ds->mtu_enforcement_ingress = true;
 
-	/* We rely on software untagging on the CPU port, so that we
-	 * can support both tagged and untagged VLANs
-	 */
-	ds->untag_bridge_pvid = true;
-
 	/* VLAN filtering is partly controlled by the global VLAN
 	 * Enable flag
 	 */
