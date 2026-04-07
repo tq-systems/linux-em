@@ -272,7 +272,7 @@ static int page_pool_init(struct page_pool *pool,
 	/* Driver calling page_pool_create() also call page_pool_destroy() */
 	refcount_set(&pool->user_cnt, 1);
 
-	xa_init_flags(&pool->dma_mapped, XA_FLAGS_ALLOC1);
+	xa_init_flags(&pool->dma_mapped, XA_FLAGS_ALLOC1 | XA_FLAGS_LOCK_BH);
 
 	if (pool->slow.flags & PP_FLAG_ALLOW_UNREADABLE_NETMEM) {
 		netdev_assert_locked(pool->slow.netdev);
