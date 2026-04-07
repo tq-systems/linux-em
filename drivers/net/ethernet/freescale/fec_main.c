@@ -3479,7 +3479,7 @@ fec_enet_alloc_rxq_buffers(struct net_device *ndev, unsigned int queue)
 	}
 
 	for (i = 0; i < rxq->bd.ring_size; i++) {
-		page = page_pool_dev_alloc_pages(rxq->page_pool);
+		page = page_pool_alloc_pages(rxq->page_pool, GFP_KERNEL);
 		if (!page)
 			goto err_alloc;
 
