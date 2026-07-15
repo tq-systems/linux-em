@@ -5303,10 +5303,9 @@ static struct dentry *nfs4_proc_mkdir(struct inode *dir, struct dentry *dentry,
 	do {
 		alias = _nfs4_proc_mkdir(dir, dentry, sattr, label, &err);
 		trace_nfs4_mkdir(dir, &dentry->d_name, err);
+		err = nfs4_handle_exception(NFS_SERVER(dir), err, &exception);
 		if (err)
-			alias = ERR_PTR(nfs4_handle_exception(NFS_SERVER(dir),
-							      err,
-							      &exception));
+			alias = ERR_PTR(err);
 	} while (exception.retry);
 	nfs4_label_release_security(label);
 
@@ -10999,6 +10998,9 @@ static struct nfs_server *nfs4_clone_server(struct nfs_server *source,
 	server = nfs_clone_server(source, fh, fattr, flavor);
 	if (IS_ERR(server))
 		return server;
+
+	nfs4_session_limit_rwsize(server);
+	nfs4_session_limit_xasize(server);
 
 	error = nfs4_delegation_hash_alloc(server);
 	if (error) {

@@ -767,6 +767,8 @@ void mremap_userfaultfd_fail(struct vm_userfaultfd_ctx *vm_ctx)
 	if (!ctx)
 		return;
 
+	atomic_dec(&ctx->mmap_changing);
+	VM_WARN_ON_ONCE(atomic_read(&ctx->mmap_changing) < 0);
 	userfaultfd_ctx_put(ctx);
 }
 
@@ -1218,8 +1220,6 @@ static __always_inline int validate_unaligned_range(
 	if (len & ~PAGE_MASK)
 		return -EINVAL;
 	if (!len)
-		return -EINVAL;
-	if (start < mmap_min_addr)
 		return -EINVAL;
 	if (start >= task_size)
 		return -EINVAL;
