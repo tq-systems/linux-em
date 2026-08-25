@@ -1097,6 +1097,12 @@ properties:
           - const: fsl,imx8mn
 
       - description:
+          TQ-Systems Energy Gateway i.MX8MN based board EG4xx
+        items:
+          - const: tq,imx8mn-eg4xx
+          - const: fsl,imx8mn
+
+      - description:
           TQ-Systems Energy Manager i.MX8MN based board EM4xx
         items:
           - const: tq,em4xx
