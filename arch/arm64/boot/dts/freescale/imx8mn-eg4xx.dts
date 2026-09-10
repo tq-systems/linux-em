@@ -345,9 +345,9 @@
 	};
 
 	pcf85063: rtc@51 {
-		compatible = "nxp,pcf85063a";
+		compatible = "nxp,pcf85063tp";
 		reg = <0x51>;
-		quartz-load-femtofarads = <7000>;
+		quartz-load-femtofarads = <12500>;
 	};
 };
 
