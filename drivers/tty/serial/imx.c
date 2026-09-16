@@ -2024,6 +2024,7 @@ static int imx_uart_rs485_config(struct uart_port *port, struct ktermios *termio
 				 struct serial_rs485 *rs485conf)
 {
 	struct imx_port *sport = to_imx_port(port);
+	struct tty_port *tport = &sport->port.state->port;
 	u32 ucr2, ufcr;
 
 	if (rs485conf->flags & SER_RS485_ENABLED) {
@@ -2042,12 +2043,9 @@ static int imx_uart_rs485_config(struct uart_port *port, struct ktermios *termio
 	}
 
 	/* Make sure Rx is enabled in case Tx is active with Rx disabled */
-	if (!(rs485conf->flags & SER_RS485_ENABLED) ||
-	    rs485conf->flags & SER_RS485_RX_DURING_TX) {
-		/* If the receiver trigger is 0, set it to a default value */
-		ufcr = imx_uart_readl(sport, UFCR);
-		if ((ufcr & UFCR_RXTL_MASK) == 0)
-			imx_uart_setup_ufcr(sport, TXTL_DEFAULT, sport->rxtl);
+	if (tty_port_initialized(tport) &&
+	    (!(rs485conf->flags & SER_RS485_ENABLED) ||
+	     rs485conf->flags & SER_RS485_RX_DURING_TX)) {
 		imx_uart_start_rx(port);
 	}
 
