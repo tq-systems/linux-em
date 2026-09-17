@@ -49,6 +49,7 @@
 			function = LED_FUNCTION_STATUS;
 			function-enumerator = <0>;
 			gpios = <&gpio5 2 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "timer";
 		};
 
 		/* LED1_RD */
