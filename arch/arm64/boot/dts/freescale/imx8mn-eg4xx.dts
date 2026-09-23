@@ -454,7 +454,7 @@
 	};
 
 	pinctrl_gpiobutton: gpiobuttongrp {
-		fsl,pins = <MX8MN_IOMUXC_SAI3_TXFS_GPIO4_IO31	0x40000040>;
+		fsl,pins = <MX8MN_IOMUXC_SAI3_TXFS_GPIO4_IO31	0x400000c0>;
 	};
 
 	pinctrl_gpioled: gpioledgrp {
